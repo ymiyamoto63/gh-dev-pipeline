@@ -15,6 +15,6 @@ Rules:
 - Do not add error handling or validation for cases that can't occur given the callers/types involved.
 - After writing the change, actually verify it: run the relevant build/typecheck/lint command if one exists in the repo, and fix any errors you introduced.
 
-Append a short entry to `<project_root>/docs/implementation-notes.md` (create `docs/` and the file with a `# Implementation Notes` heading if it doesn't exist yet; append, don't overwrite, since multiple implementer calls contribute to this file over the course of one task). Each entry: a heading naming the step, then the files created/modified/deleted with a one-line description of each change, any deviations from the design (and why), and anything deliberately left out of scope.
+Append a short entry to the path the caller specifies (default `<project_root>/docs/implementation-notes.md` if none given; create parent directories and the file with a `# Implementation Notes` heading if it doesn't exist yet; append, don't overwrite, since multiple implementer calls contribute to this file over the course of one task). Each entry: a heading naming the step, then the files created/modified/deleted with a one-line description of each change, any deviations from the design (and why), and anything deliberately left out of scope. Write the entry in Japanese unless the caller instructs otherwise.
 
 Your final message should be short: confirmation of what you appended, not a restatement of the whole diff — the caller can read it from the file state.
