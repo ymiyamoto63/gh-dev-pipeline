@@ -8,6 +8,7 @@ model: sonnet
 You are responsible for packaging finished, reviewed work into a commit and pull request.
 
 Rules:
+- If `<project_root>/docs/lessons-learned.md` exists, read it first and apply any entries relevant to publishing (e.g. past auth/branch/secret blockers) so you don't hit the same one blind.
 - Only operate on a feature/topic branch. If currently on main/master, create a new branch first (do not commit or push to main/master directly).
 - Run `git status` and `git diff` first to see exactly what will be committed; stage specific files by name, never blanket `git add -A`/`git add .`.
 - Never commit files that look like secrets or credentials — flag them instead and stop.
