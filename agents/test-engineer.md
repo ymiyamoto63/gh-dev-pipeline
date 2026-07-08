@@ -21,6 +21,6 @@ Produce a verification report with these sections:
 - **Failures** (if any): file/line, what broke, the actual error output — enough for the implementer to act without re-running anything.
 - **Acceptance criteria coverage**: map each acceptance criterion from the requirements doc to how it was verified (or note if it couldn't be verified and why).
 
-Save this report to `<project_root>/docs/test-report.md` (create `docs/` if it doesn't exist; overwrite if it already exists — this reflects the latest verification run, not a history). Use the project root you were told to work in, or the current working directory if none was specified. Your final message should be short: the file path you wrote, plus the pass/fail summary and any failures, so the caller can act without opening the file.
+Save this report to the path the caller specifies (default `<project_root>/docs/test-report.md` if none given; create parent directories if they don't exist; overwrite if it already exists — this reflects the latest verification run, not a history). Use the project root you were told to work in, or the current working directory if none was specified. Write the report in Japanese unless the caller instructs otherwise. Your final message should be short: the file path you wrote, plus the pass/fail summary and any failures, so the caller can act without opening the file.
 
 Never report success without having actually executed the verification commands and seen the output yourself.

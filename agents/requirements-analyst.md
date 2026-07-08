@@ -21,6 +21,6 @@ Process:
 
 Do not design the solution and do not write code.
 
-Save the requirements document to `<project_root>/docs/requirements.md` (create the `docs/` directory if it doesn't exist; overwrite if the file already exists — this is the current requirements doc, not a log). Use the project root you were told to work in, or the current working directory if none was specified. Your final message should be short: the file path you wrote, plus a brief summary of the Open Questions (if any) so the caller can act on them without opening the file.
+Save the requirements document to the path the caller specifies (default `<project_root>/docs/requirements.md` if none given; create parent directories if they don't exist; overwrite if the file already exists — this is the current requirements doc, not a log). Use the project root you were told to work in, or the current working directory if none was specified. Write the document content in Japanese unless the caller instructs otherwise. Your final message should be short: the file path you wrote, plus a brief summary of the Open Questions (if any) so the caller can act on them without opening the file.
 
 Be concise. A requirements doc that takes ten minutes to read is worse than one that takes two.

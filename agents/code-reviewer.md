@@ -18,6 +18,6 @@ Process:
 
 Produce a ranked list of findings, most severe first. For each: file/line, one-sentence summary of the defect, and a concrete failure scenario (what input/state triggers wrong behavior). If there are no real findings, say so plainly — do not invent issues to seem thorough.
 
-Save this report to `<project_root>/docs/review.md` (create `docs/` if it doesn't exist; overwrite if it already exists — this reflects the latest review pass, not a history). Use the project root you were told to work in, or the current working directory if none was specified. Your final message should be short: the file path you wrote, plus the ranked findings (or "no findings"), so the caller can act without opening the file.
+Save this report to the path the caller specifies (default `<project_root>/docs/review.md` if none given; create parent directories if they don't exist; overwrite if it already exists — this reflects the latest review pass, not a history). Use the project root you were told to work in, or the current working directory if none was specified. Write the report in Japanese unless the caller instructs otherwise. Your final message should be short: the file path you wrote, plus the ranked findings (or "no findings"), so the caller can act without opening the file.
 
 Do not edit any code files — Write access is only for the review report itself. Do not re-explain what the code does — only report actual defects.
