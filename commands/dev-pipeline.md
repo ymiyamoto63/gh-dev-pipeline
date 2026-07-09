@@ -1,57 +1,82 @@
 ---
 description: Run a feature/bugfix through requirements -> design -> implementation -> test -> review -> PR, delegating each phase to a dedicated subagent.
-argument-hint: <task description>
+argument-hint: <task description> | resume #<issue-number>
 ---
 
 Task: $ARGUMENTS
 
 Run this task through the full dev pipeline, using the Agent tool to delegate each phase to its dedicated subagent. Each subagent starts with no memory of this conversation, so every call must be self-contained: include the task, the project root, and relevant file paths. Do not perform the phases yourself — delegate and synthesize.
 
-**Language: All output documents and GitHub Issue content must be written in Japanese.**
+**Language: All output documents, commit messages, and GitHub Issue content must be written in Japanese.**
 
-**Target stack (default assumption — what the actual repo does always wins):** the projects this pipeline runs against are SPAs with a Vue 3 + TypeScript + Pinia + Vuetify + Vite + pnpm frontend and a Java Spring Boot + Flyway + PostgreSQL backend, developed inside a devcontainer. Include this one-line stack brief in every subagent prompt. Once requirements are known, also tell each subagent which sides the task touches (frontend / backend API / DB schema / cross-cutting). Remind subagents that build/test commands must be discovered from the repo (package.json scripts, mvnw/gradlew wrapper) rather than guessed, and that they run inside the devcontainer — if a needed tool is missing they report it, they don't install it.
+**Resume mode:** if the argument is `resume #<issue-number>` (or clearly refers to an existing run), read `docs/<issue-number>/pipeline-state.md`, check out the branch it names if you aren't already on it, and continue from the first incomplete phase, keeping the retry counters it records. The docs already in `docs/<issue-number>/` are the authoritative record of the completed phases — don't redo them.
 
-**Document directory:** Every phase's subagent writes its output document to `<project_root>/docs/<issue-number>/` (where `<issue-number>` is the GitHub Issue number assigned in phase 1). The directory is created after phase 1 when the issue number is known. Tell each subagent the exact docs directory path explicitly. When delegating to a later phase, point it at the doc path(s) from earlier phases rather than pasting their full contents into the prompt — the subagent has Read access and the file is authoritative.
+**Project pipeline config:** before phase 1, check whether `<project_root>/docs/pipeline-config.md` exists. If it does, it carries the project's stack brief and per-phase rules: include its `## stack` section in every subagent prompt, and additionally pass each subagent its own phase's section (`## design` to software-architect, `## review` to code-reviewer, and so on). If it doesn't exist, detect the stack yourself from the repo (package.json, pom.xml / build.gradle, devcontainer config, …), give every subagent a one-line stack brief instead, and at the end of the run suggest the user add a `docs/pipeline-config.md` (template: `templates/pipeline-config.md` in the dev-pipeline repo). Either way, remind subagents that build/test commands must be discovered from the repo (package.json scripts, mvnw/gradlew wrapper) rather than guessed, and that if a needed tool is missing they report it — they don't install it.
 
-**Lessons learned (failure recall).** `<project_root>/docs/lessons-learned.md` is a cumulative log, separate from the per-run docs above: it is never overwritten, only appended to, and it survives across pipeline runs so past failures inform future ones. Before phase 1, check whether it exists. If it does, tell every subagent you call in this run to read it first (e.g. "also read `docs/lessons-learned.md` and apply any lessons relevant to your phase before you start") — the file has Read access for all of them.
+**Preflight:** before phase 1, run `git status`. If the working tree is dirty, stop and ask the user via AskUserQuestion whether to abort so they can clean up first, or to continue leaving the pre-existing changes strictly alone — never assume stray changes belong to this task. Note the current branch and `git rev-parse HEAD`.
 
-Whenever a retry loop in phases 4, 5, or 6 below fires (a test failure, a blocking review finding, or a publish blocker), once it's resolved — or once the retry budget is exhausted and you stop — append one entry to `docs/lessons-learned.md` yourself (create the file with a `# Lessons Learned` heading if it doesn't exist yet). Use today's date and this shape:
+**Branch & checkpoint commits:** the pipeline works on a dedicated branch `feature/<issue-number>-<short-slug>`, created at the end of phase 1; the HEAD it was created from is the **base SHA** — every later diff is `<base SHA>..HEAD`. Commit checkpoints as you go: after phase 1 (requirements doc + state file), after phase 2 (design doc), after each implementation step that passes its build check, and after each retry-loop fix — staging the involved files by name (never `git add -A`) and including `docs/<issue-number>/pipeline-state.md` in each checkpoint commit. Message shape: `<フェーズ/ステップの要約> (#<issue-number>)`, in Japanese. Checkpoints give every retry a known-good point to return to and make the review diff exactly the pipeline's work.
+
+**Pipeline state:** as soon as the issue number is known, create `docs/<issue-number>/pipeline-state.md` and update it after every phase and every retry iteration — this file is what makes an interrupted run resumable. Shape:
 
 ```
-## YYYY-MM-DD — <phase> — <short title>
+# Pipeline State
+- Issue: #123
+- Branch: feature/123-avatar-upload
+- Base SHA: abc1234
+- Mode: confirm-design | auto
+- [x] 1. requirements（承認済み）
+- [x] 2. design
+- [ ] 3. implementation（step 2/4）
+- [ ] 4. testing（retry 0/3）
+- [ ] 5. review（retry 0/2）
+- [ ] 6. publish
+```
+
+**Document directory:** every phase's subagent writes its output document to `<project_root>/docs/<issue-number>/` (where `<issue-number>` is the GitHub Issue number assigned in phase 1). Tell each subagent the exact docs directory path explicitly. When delegating to a later phase, point it at the doc path(s) from earlier phases rather than pasting their full contents into the prompt — the subagent has read access and the file is authoritative.
+
+**Lessons learned (failure recall).** `<project_root>/docs/lessons-learned.md` is a cumulative log, separate from the per-run docs above: it is never overwritten, only appended to, and it survives across pipeline runs so past failures inform future ones. It is organized into one section per phase, each entry dated:
+
+```
+# Lessons Learned
+
+## <phase>            … requirements / design / implementation / testing / review / publish
+
+### YYYY-MM-DD — <short title>
 - **失敗**: 具体的に何が壊れたか
 - **根本原因**: なぜ発生したか
 - **修正**: 何が解決したか（リトライ予算が尽きた場合は「未解決 — パイプライン停止」）
 - **予防策**: 次回同フェーズのサブエージェントへの具体的・実行可能な指針
 ```
 
-Keep entries short and specific — this file is only useful if it stays skimmable; don't log routine, non-recurring issues (e.g. a one-off typo the implementer fixed on its own without a retry loop).
+Read it once before phase 1 (if it exists) and, when delegating, excerpt into each subagent's prompt only the entries from its own phase's section — don't make every phase re-read the whole file; a long history would bloat every call. (If an existing file still uses the old flat format — `## date — phase — title` headings — read it whole and excerpt by the phase named in each heading.)
+
+Whenever a retry loop in phases 4, 5, or 6 below fires (a test failure, a blocking review finding, or a publish blocker), once it's resolved — or once the retry budget is exhausted and you stop — append one entry under the matching phase section (create the file with a `# Lessons Learned` heading, or the missing section, if needed). Before appending, check whether an existing entry in that section already describes the same root cause: if so, update that entry (add the new date, sharpen the 予防策) instead of duplicating it. Keep entries short and specific — this file is only useful if it stays skimmable; don't log routine, non-recurring issues (e.g. a one-off typo the implementer fixed on its own without a retry loop). If the file has grown past ~30 entries, suggest at the end of the run that the user let you consolidate it.
 
 Phases, in order:
 
-1. **Requirements** — call subagent_type `requirements-analyst` with the raw task description and the project root. It writes `docs/requirements.md` (temporary location before issue number is known). **All document content must be in Japanese.** If it reports open questions that materially affect design, resolve them with the user via AskUserQuestion before continuing (don't guess on anything that changes scope) — update the file yourself if the resolution changes its content, or note the resolution when briefing the next phase.
+1. **Requirements** — call subagent_type `requirements-analyst` with the raw task description and the project root. It writes `docs/requirements.md` (temporary location before the issue number is known). **All document content must be in Japanese.**
 
-   After the requirements doc is written, **create a GitHub Issue** using `gh issue create`:
-   - Title: task summary in Japanese (concise, one line)
-   - Body: the full content of `docs/requirements.md`
-   - Label: `requirements` if it exists, otherwise no label
-   
-   Capture the issue number from the output (e.g. `gh issue create` prints the URL — extract the number). Then move `docs/requirements.md` to `docs/<issue-number>/requirements.md` (create the directory first). All subsequent docs go into `docs/<issue-number>/`.
+   *Interview loop:* if it reports open questions that materially affect scope or design, resolve them with the user via AskUserQuestion (don't guess on anything that changes scope), then re-invoke `requirements-analyst` in its update mode — pass it the doc path and the user's answers so it folds them into the document itself (don't edit the doc yourself; the analyst keeps its structure consistent). Repeat up to 2 rounds; if genuine ambiguity still remains, put the remaining questions to the user plainly and settle them before continuing.
 
-2. **Design** — call subagent_type `software-architect`, pointing it at `docs/<issue-number>/requirements.md`. It writes `docs/<issue-number>/design.md`. **All document content must be in Japanese.** If the task crosses the frontend/backend boundary, check the design doc actually contains the API contract section (endpoints, request/response shapes, error responses) and — when the DB schema changes — a Flyway migration plan; if either is missing, send it back to `software-architect` once to fill the gap before proceeding. Show the user a brief summary (files affected + approach, a few sentences) and confirm before moving on if the change is non-trivial (multiple files, new dependencies, architectural change). For small/obvious changes you may proceed without pausing.
+   *Approval gate:* once open questions are resolved, show the user a compact summary — scope, acceptance criteria (flagging the 手動確認-tagged ones), non-goals — and ask via a single AskUserQuestion call: (a) approve the requirements or request changes, and (b) pick the run mode: **confirm-design** (pause again for design approval) or **auto** (run phases 2–5 without stopping; publishing always requires confirmation regardless). Do not create the GitHub Issue before approval.
 
-   After the design doc is written, **update the GitHub Issue** by posting a comment using `gh issue comment <issue-number>`:
-   - Body: `## 設計\n\n` followed by the full content of `docs/<issue-number>/design.md`
+   After approval: create a GitHub Issue with `gh issue create` — title: task summary in Japanese (concise, one line); body: the full content of `docs/requirements.md`; label `requirements` if it exists, otherwise none. Capture the issue number from the printed URL. Move `docs/requirements.md` to `docs/<issue-number>/requirements.md` (create the directory first) — all subsequent docs go there. Create the branch `feature/<issue-number>-<short-slug>` from the current HEAD and record that HEAD as the base SHA. Write `pipeline-state.md`, then make the first checkpoint commit (requirements doc + state file).
 
-3. **Implementation** — call subagent_type `implementer` once per implementation step from the design (or batch tightly-related small steps together), pointing it at `docs/<issue-number>/requirements.md` and the relevant slice of `docs/<issue-number>/design.md`, plus exact file paths. Follow the design's step order — for cross-boundary changes that is typically Flyway migration → backend → frontend, so each step builds on a compiling base. Each call appends to `docs/<issue-number>/implementation-notes.md`. **All document content must be in Japanese.** After the last step, sanity-check with `git status`/`git diff --stat` that the working tree actually contains changes matching the design's "Files affected" list before moving to testing.
+2. **Design** — call subagent_type `software-architect`, pointing it at `docs/<issue-number>/requirements.md` (plus its lessons excerpt and the config's `## design` section). It writes `docs/<issue-number>/design.md`. **All document content must be in Japanese.** If the task crosses the frontend/backend boundary, check the design doc actually contains the API contract section (endpoints, request/response shapes, error responses) and whatever the config's design rules additionally require (e.g. a DB migration plan when the schema changes); if something is missing, send it back to `software-architect` once to fill the gap before proceeding.
 
-4. **Testing** — call subagent_type `test-engineer`, pointing it at `docs/<issue-number>/requirements.md`, `docs/<issue-number>/design.md` (its Test strategy section), and `docs/<issue-number>/implementation-notes.md`. Tell it which sides changed — it must run the test suites for every changed side (frontend and/or backend), not just one. It writes `docs/<issue-number>/test-report.md`. **All document content must be in Japanese.**
-   - If it reports failures: route them back to a new `implementer` call to fix — point it at `docs/<issue-number>/test-report.md` (the exact commands and error output) rather than paraphrasing — then re-run `test-engineer`. Repeat up to 3 times; if still failing, stop and report the blocker to the user instead of continuing to loop. Either way (fixed, or budget exhausted), append a lesson entry per the format above.
+   Post the design to the Issue: `gh issue comment <issue-number>` with `## 設計\n\n` followed by the full content of `docs/<issue-number>/design.md`. Then show the user a brief summary (files affected + approach, a few sentences). In **confirm-design** mode, wait for their approval via AskUserQuestion before continuing; in **auto** mode, continue immediately — the summary is a status update, not a gate. Checkpoint-commit the design doc + state file.
 
-5. **Review** — call subagent_type `code-reviewer`, pointing it at `docs/<issue-number>/requirements.md`, `docs/<issue-number>/design.md`, and `docs/<issue-number>/implementation-notes.md`. It writes `docs/<issue-number>/review.md`. **All document content must be in Japanese.**
-   - If there are correctness-level (not stylistic) findings: route them back to `implementer` to fix, then re-run `test-engineer` and `code-reviewer` again. Repeat up to 2 times; if issues persist, stop and summarize the unresolved findings for the user instead of publishing. Either way, append a lesson entry per the format above.
+3. **Implementation** — call subagent_type `implementer` once per implementation step from the design (or batch tightly-related small steps together), pointing it at `docs/<issue-number>/requirements.md` and the relevant slice of `docs/<issue-number>/design.md`, plus exact file paths (and its lessons excerpt and the config's `## implementation` section). Follow the design's step order — for cross-boundary changes that is typically DB migration → backend → frontend, so each step builds on a compiling base. Each call appends to `docs/<issue-number>/implementation-notes.md`. **All document content must be in Japanese.** After each step's verification passes, checkpoint-commit that step's files (+ notes + state file), message like `step <n>/<total>: <ステップ名> (#<issue-number>)`. After the last step, sanity-check with `git diff <base SHA> --stat` that the branch actually contains changes matching the design's "Files affected" list before moving to testing.
 
-6. **Publish** — before calling `pr-publisher`, explicitly ask the user for confirmation (this pushes to a remote and opens a PR — a visible, hard-to-reverse action). Once confirmed, call subagent_type `pr-publisher`, pointing it at `docs/<issue-number>/requirements.md`, `docs/<issue-number>/design.md`, and `docs/<issue-number>/test-report.md` so it can write an accurate PR body. It also saves `docs/<issue-number>/pr-description.md`. Include `Closes #<issue-number>` in the PR body so the Issue closes automatically on merge.
-   - If it stops instead of publishing (no `gh` auth, no remote, suspected secrets, wrong branch), append a lesson entry per the format above so the next run avoids the same blocker.
+4. **Testing** — call subagent_type `test-engineer`, pointing it at `docs/<issue-number>/requirements.md`, `docs/<issue-number>/design.md` (its Test strategy section), and `docs/<issue-number>/implementation-notes.md` (plus its lessons excerpt and the config's `## testing` section). Tell it which sides changed — it must run the test suites for every changed side (frontend and/or backend), not just one. It writes `docs/<issue-number>/test-report.md`. **All document content must be in Japanese.**
+   - If it reports failures: route them back to a new `implementer` call to fix — point it at `docs/<issue-number>/test-report.md` (the exact commands and error output) rather than paraphrasing — checkpoint-commit the fix, then re-run `test-engineer`. Repeat up to 3 times; if still failing, stop and report the blocker to the user instead of continuing to loop. Either way (fixed, or budget exhausted), append a lesson entry per the format above.
 
-Throughout: give the user a one-line status update between phases (what finished, what's next, which doc was written) rather than dumping each subagent's full raw output. At the end, report the PR URL (or wherever the pipeline stopped and why), and remind the user the full trail is in `docs/<issue-number>/`, including `docs/lessons-learned.md` if this run added to it.
+5. **Review** — call subagent_type `code-reviewer`, pointing it at `docs/<issue-number>/requirements.md`, `docs/<issue-number>/design.md`, `docs/<issue-number>/implementation-notes.md`, and `docs/<issue-number>/test-report.md` (plus its lessons excerpt and the config's `## review` section), and give it the base SHA — the implementation lives in checkpoint commits, so it reviews `git diff <base SHA>..HEAD`, and the test report tells it what's already verified. It writes `docs/<issue-number>/review.md`. **All document content must be in Japanese.**
+   - If there are correctness-level (not stylistic) findings: route them back to `implementer` to fix, checkpoint-commit the fix, then re-run `test-engineer` and `code-reviewer` again. Repeat up to 2 times; if issues persist, stop and summarize the unresolved findings for the user instead of publishing. Either way, append a lesson entry per the format above.
+
+6. **Publish** — always ask the user for explicit confirmation first, even in auto mode (this pushes to a remote and opens a PR — a visible, hard-to-reverse action). Once confirmed, call subagent_type `pr-publisher`, pointing it at `docs/<issue-number>/requirements.md`, `docs/<issue-number>/design.md`, and `docs/<issue-number>/test-report.md` (plus its lessons excerpt and the config's `## publish` section), and give it the base SHA and issue number. It commits any remaining uncommitted files (typically `test-report.md`, `review.md`, the state file), saves `docs/<issue-number>/pr-description.md`, pushes, and opens the PR with `Closes #<issue-number>` in the body so the Issue closes automatically on merge.
+   - After the PR exists: post a closing comment on the Issue (`gh issue comment`) with a one-line test-result summary and the PR URL, mark phase 6 done in `pipeline-state.md`, and commit & push that final state update on the feature branch.
+   - If `pr-publisher` stops instead of publishing (no `gh` auth, no remote, suspected secrets, wrong branch), append a lesson entry per the format above so the next run avoids the same blocker.
+
+Throughout: give the user a one-line status update between phases (what finished, what's next, which doc was written) rather than dumping each subagent's full raw output. At the end, report the PR URL (or wherever the pipeline stopped and why), and remind the user that the full trail is in `docs/<issue-number>/` (plus `docs/lessons-learned.md` if this run added to it) and that an interrupted run can be continued with `/dev-pipeline resume #<issue-number>`.

@@ -1,0 +1,2 @@
+claude-only| Do not edit any code files — Write access is only for the review report itself. Do not re-explain what the code does — only report actual defects.
+copilot-only| Do not edit any code files — your file-editing capability is only for writing the review report itself. Do not re-explain what the code does — only report actual defects.
