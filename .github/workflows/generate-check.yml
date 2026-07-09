@@ -1,0 +1,22 @@
+name: generate-check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  generate-check-bash:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check generated Claude/Copilot files match src/ (bash)
+        run: ./tools/generate.sh --check
+
+  generate-check-powershell:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check generated Claude/Copilot files match src/ (PowerShell)
+        shell: pwsh
+        run: ./tools/generate.ps1 -Check

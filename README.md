@@ -6,7 +6,10 @@
 
 ```
 dev-pipeline/
-├── agents/                       … Claude Code 版サブエージェント
+├── src/                          … 単一ソース（編集するのは常にここだけ）
+│   ├── dev-pipeline.md           … オーケストレーターのソース
+│   └── <agent>.md                … 6フェーズエージェントのソース
+├── agents/                       … 【生成物】Claude Code 版サブエージェント
 │   ├── requirements-analyst.md   … 要件定義（requirements.md を出力・更新）
 │   ├── software-architect.md     … 設計（design.md を出力）
 │   ├── implementer.md            … 実装（implementation-notes.md に追記）
@@ -14,19 +17,18 @@ dev-pipeline/
 │   ├── code-reviewer.md          … コードレビュー（review.md を出力）
 │   └── pr-publisher.md           … コミット・PR作成（pr-description.md を出力）
 ├── commands/
-│   └── dev-pipeline.md           … 上記6エージェントを順に呼び出すオーケストレーター（/dev-pipeline コマンド）
+│   └── dev-pipeline.md           … 【生成物】上記6エージェントを順に呼び出すオーケストレーター（/dev-pipeline コマンド）
 ├── copilot/                      … GitHub Copilot 版（VS Code / Copilot CLI 用）
-│   ├── agents/                   … オーケストレーター + 6フェーズエージェント（.agent.md）
+│   ├── agents/                   … 【生成物】オーケストレーター + 6フェーズエージェント（.agent.md）
 │   └── prompts/
-│       └── dev-pipeline.prompt.md … /dev-pipeline スラッシュコマンド（プロンプトファイル）
+│       └── dev-pipeline.prompt.md … /dev-pipeline スラッシュコマンド（プロンプトファイル・生成対象外）
 ├── templates/
 │   └── pipeline-config.md        … 対象プロジェクトに置くスタック設定のテンプレート
 ├── tools/
-│   ├── check-sync.ps1            … Claude 版 / Copilot 版の本文ドリフト検出（PowerShell）
-│   ├── check-sync.sh             … 同上（bash / macOS・Linux・git bash 用）
-│   └── sync-snapshots/           … 意図的な差分のスナップショット（両スクリプト共通）
+│   ├── generate.ps1              … src/ から Claude 版 / Copilot 版の両形式を生成（PowerShell）
+│   └── generate.sh               … 同上（bash / macOS・Linux・git bash 用）
 └── .github/workflows/
-    └── sync-check.yml            … push / PR 時に check-sync.ps1 を実行
+    └── generate-check.yml        … push / PR 時に生成物が src/ と一致するか検証
 ```
 
 各サブエージェントは、対象プロジェクトの `docs/<issue番号>/` ディレクトリにドキュメントを出力する。フェーズ間の受け渡しはこのファイルを介して行われるため、パイプライン実行の記録がそのままプロジェクトに残る。
@@ -143,21 +145,29 @@ VS Code の Copilot Chat で:
 - **ツール名**: `tools` は VS Code の統一ツール名（`read` / `edit` / `search` / `execute` / `web` / `agent` / `todos`）を使用。未知のツール名は無視されるだけなので、旧名しか認識しない環境でも定義自体は壊れない
 - パイプラインの流れ・ブランチ運用・pipeline-state・pipeline-config・lessons-learned・リトライ予算は Claude Code 版と同一
 
-## 2形式の同期チェック
+## 2形式の生成（単一ソース）
 
-Claude 版と Copilot 版の本文は意図的な差分（確認方法・サブエージェント呼び出しの表現）を除いて同一に保つ。片方だけ編集した場合のドリフトは `tools/check-sync.ps1`（PowerShell）/ `tools/check-sync.sh`（bash）が検出する（push / PR 時に GitHub Actions でも実行）。両スクリプトは同じロジック・同じスナップショット形式を使うため、OS を問わずどちらで実行しても同じ結果になる。
+Claude 版（`agents/` + `commands/`）と Copilot 版（`copilot/agents/`）は `src/` の単一ソースから生成される。**編集するのは常に `src/` のみ**。生成物の先頭には AUTO-GENERATED の注記が入っており、直接編集してはいけない（CI が検出して失敗する）。
+
+`src/<name>.md` は3つのセクションからなる:
+
+- `<<<claude>>>` … Claude 版の frontmatter（`---` 行ごとそのまま出力される）
+- `<<<copilot>>>` … Copilot 版の frontmatter
+- `<<<body>>>` … 共通本文。形式によって文言が異なる箇所だけを `{{claude:〜}}{{copilot:〜}}` とインラインで書き分ける（マーカー内に `}` は使えない。片方の形式にしか存在しない行は、もう片方の出力では行ごと削除される）
+
+`src/` を編集したら生成を実行し、ソースと生成物を一緒にコミットする:
 
 ```powershell
-.\tools\check-sync.ps1            # 検証（ドリフトがあれば exit 1）
-.\tools\check-sync.ps1 -Update    # 意図的な差分を変更した後にスナップショットを更新
+.\tools\generate.ps1           # 生成
+.\tools\generate.ps1 -Check    # 生成物が src/ と一致するか検証（CI と同じ）
 ```
 
 ```bash
-./tools/check-sync.sh             # 検証（ドリフトがあれば exit 1）
-./tools/check-sync.sh --update    # 意図的な差分を変更した後にスナップショットを更新
+./tools/generate.sh            # 生成
+./tools/generate.sh --check    # 検証
 ```
 
-両形式を編集したら必ずこのチェックを通すこと。意図的に差分を変えた場合は `-Update` / `--update` でスナップショットを更新してコミットする。
+push / PR 時には GitHub Actions（`generate-check.yml`）が両スクリプトの check モードを実行し、生成し忘れ・生成物の直接編集を検出する。なお `copilot/prompts/dev-pipeline.prompt.md` は Copilot 専用の薄いラッパーのため生成対象外（直接編集してよい）。
 
 ## 前提・制約
 
