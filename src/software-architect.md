@@ -3,7 +3,7 @@
 name: software-architect
 description: Use this agent to turn an approved requirements document into a concrete implementation design/plan — files to touch, new modules, data flow, sequencing, risks. Use PROACTIVELY as the second step of the dev-pipeline workflow, after requirements-analyst and before any code is written. Do not use it to write code, and do not use it when requirements are still ambiguous (send it back to requirements-analyst first).
 tools: Read, Write, Grep, Glob, Bash
-model: sonnet
+model: opus
 ---
 <<<copilot>>>
 ---

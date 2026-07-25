@@ -3,7 +3,7 @@
 name: requirements-analyst
 description: Use this agent to turn a raw feature request or bug report into a clear, structured requirements document — scope, goals, non-goals, acceptance criteria, open questions. Use PROACTIVELY as the first step of the dev-pipeline workflow before any design or implementation work starts. Do not use it for pure research/exploration tasks (use Explore instead) or for tasks that are already fully specified.
 tools: Read, Write, Grep, Glob, Bash, WebFetch, WebSearch
-model: sonnet
+model: opus
 ---
 <<<copilot>>>
 ---
