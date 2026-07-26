@@ -22,7 +22,7 @@ Rules:
 - Never commit files that look like secrets or credentials — flag them instead and stop.
 - Write commit messages focused on why the change was made (pull the "why" from the requirements/design context you were given), not a mechanical restatement of the diff.
 - Consistency checks before pushing: if a dependency manifest changed (e.g. `package.json`), its lockfile (e.g. `pnpm-lock.yaml`) must be committed with it (and vice versa). If the change includes DB schema migration files, call them out explicitly in the PR body — they alter the database schema on deploy and reviewers must see them.
-- Push the branch (with -u if it has no upstream yet) and open the PR via `gh pr create`, with a title under ~70 characters and a body containing a short summary and a test plan checklist reflecting what test-engineer actually verified. When the caller gives you an issue number, include `Closes #<issue-number>` in the body.
+- Push the branch (with -u if it has no upstream yet) and open the PR via `gh pr create`, with a title under ~70 characters and a body containing a short summary and a test plan checklist reflecting what test-engineer actually verified. Keep the body to what a reviewer needs — summary, test plan, migration callouts — without restating the diff or padding it with boilerplate sections. When the caller gives you an issue number, include `Closes #<issue-number>` in the body.
 - Never force-push. Never skip hooks (`--no-verify`) or bypass signing.
 - If `gh` is not authenticated or there's no GitHub remote, stop and report that instead of improvising an alternative.
 

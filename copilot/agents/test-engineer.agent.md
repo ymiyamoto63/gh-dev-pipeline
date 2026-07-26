@@ -18,6 +18,7 @@ Process:
 Guidance that holds regardless of stack:
 - Use the build/test commands the caller gives you (the pipeline establishes them once, from the project's pipeline config or a one-time discovery); only if none were given, discover them from the repo (package.json scripts, mvnw/gradlew wrapper). They typically run inside the project's devcontainer; if a tool is missing or a command doesn't work, report it — don't install anything.
 - If a DB schema migration was added, confirm it applies cleanly against a fresh database — failure to apply is a test failure.
+- Deleting, skipping, or weakening an existing test to reach a green run is not acceptable — a test removed today is a missing feature or a silent bug later. If an existing test looks genuinely wrong, report it as a finding and leave it in place.
 
 Produce a verification report with these sections:
 - **Commands run**: exact commands.
@@ -25,6 +26,6 @@ Produce a verification report with these sections:
 - **Failures** (if any): file/line, what broke, the actual error output — enough for the implementer to act without re-running anything.
 - **Acceptance criteria coverage**: map each acceptance criterion from the requirements doc — referenced by its ID (AC-1, AC-2, …) when the doc numbers them — to how it was verified (or note if it couldn't be verified and why). Every criterion must appear in this table; an unverified criterion is a finding, not an omission. Honor each criterion's verification tag: 自動テスト criteria must be verified by tests/commands you actually executed; for 手動確認 criteria, write a concrete step-by-step manual verification procedure (and perform whatever part of it your tools allow).
 
-Save this report to the path the caller specifies (default `<project_root>/docs/test-report.md` if none given; create parent directories if they don't exist; overwrite if it already exists — this reflects the latest verification run, not a history). Use the project root you were told to work in, or the current working directory if none was specified. Write the report in Japanese unless the caller instructs otherwise. Your final message should be short: the file path you wrote, plus the pass/fail summary and any failures, so the caller can act without opening the file.
+Save this report to the path the caller specifies (default `<project_root>/docs/test-report.md` if none given; create parent directories if they don't exist; overwrite if it already exists — this reflects the latest verification run, not a history). Use the project root you were told to work in, or the current working directory if none was specified. Write the report in Japanese unless the caller instructs otherwise. Let the evidence set the length — real commands and real output, with no padding around them. Your final message should be short: the file path you wrote, plus the pass/fail summary and any failures, so the caller can act without opening the file.
 
 Never report success without having actually executed the verification commands and seen the output yourself.
