@@ -162,7 +162,7 @@ VS Code の Copilot Chat で:
 
 ### Claude Code 版との相違点
 
-- **モデル指定なし**: Claude Code 版はフェーズエージェントを `sonnet`（Claude Sonnet 5）に固定し、機械的な git/gh 作業しかしない `pr-publisher` のみ `haiku` にしている（トークン利用料節約のため）。Copilot 版はモデルピッカーの選択に従う。フェーズごとに固定したい場合は各 `.agent.md` の frontmatter に `model: <モデル名>`（モデルピッカー表示名）を追記する。Claude Code 版でモデルを変えたい場合（例: 精度を最も左右する `software-architect` / `code-reviewer` を上位モデルにする — 設計・レビューの質が上がると下流のリトライが減るため、難しいタスクではトークン総量でもむしろ安くつくことがある）は、`src/<agent>.md` の claude 側 frontmatter の `model` を変更（親セッションのモデルを継承させるなら削除）して再生成する
+- **モデル指定なし**: Claude Code 版は、精度が下流のリトライ回数を最も左右する `requirements-analyst` / `software-architect` を `opus`（Claude Opus 5）に、`implementer` / `test-engineer` / `code-reviewer` を `sonnet`（Claude Sonnet 5）に、機械的な git/gh 作業しかしない `pr-publisher` を `haiku` にしている（上流の要件・設計の質が上がると下流のリトライが減るため、難しいタスクではトークン総量でもむしろ安くつくことがある）。Copilot 版はモデルピッカーの選択に従う。フェーズごとに固定したい場合は各 `.agent.md` の frontmatter に `model: <モデル名>`（モデルピッカー表示名）を追記する。Claude Code 版でモデルを変えたい場合は、`src/<agent>.md` の claude 側 frontmatter の `model` を変更（親セッションのモデルを継承させるなら削除）して再生成する
 - **ユーザー確認**: Claude Code の AskUserQuestion の代わりに、チャット上で直接質問して回答を待つ
 - **ツール名**: `tools` は VS Code の統一ツール名（`read` / `edit` / `search` / `execute` / `web` / `agent` / `todos`）を使用。未知のツール名は無視されるだけなので、旧名しか認識しない環境でも定義自体は壊れない
 - パイプラインの流れ・ブランチ運用・pipeline-state・pipeline-config・lessons-learned・リトライ予算は Claude Code 版と同一
@@ -201,13 +201,16 @@ push / PR 時には GitHub Actions（`generate-check.yml`）が両スクリプ�
 
 ## プロンプト設計の方針
 
-エージェント定義は Anthropic の [プロンプティングのベストプラクティス](https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/claude-prompting-best-practices) と [Claude Opus 5 のプロンプティング](https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/prompting-claude-opus-5) に沿っている。`src/` を編集する際は以下を崩さないこと。
+エージェント定義は Anthropic の [プロンプティングのベストプラクティス](https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/claude-prompting-best-practices)、[Claude Opus 5 のプロンプティング](https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/prompting-claude-opus-5)、[Claude Sonnet 5 のプロンプティング](https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/prompting-claude-sonnet-5)、および [Claude 5 世代のコンテキストエンジニアリングの新ルール](https://claudefa.st/blog/guide/mechanics/claude-5-context-engineering) に沿っている（要件定義・設計エージェントは Opus 5、実装・テスト・レビューは Sonnet 5 で動くため、両モデルのガイドが対象になる）。`src/` を編集する際は以下を崩さないこと。
 
 - **成果物の分量を明示的に抑える** — Opus 5 はディスクに書くドキュメントが長くなりがちなので、文書を書く各フェーズに「中身は網羅しつつ埋め草・言い換えの要約・定型文は省く」旨を持たせている
 - **冗長なナレーションを抑える** — オーケストレーターの `<tone_preference>` ブロックで、フェーズ間は1行の状況報告に留め、前置きではなく結果から書き出させる。エフォート設定では応答の長さは制御できないため、プロンプトで明示する必要がある
 - **検証指示を重ねない** — 「最終確認ステップを入れる」「回答を再確認する」「サブエージェントで検証する」といった指示は、Opus 5 が既に自前でやっていることと重複して過剰検証を招くので追加しないこと。検証は実コマンドを走らせる `implementer` / `test-engineer` の実作業としてのみ持たせる
 - **委譲に上限を設ける** — オーケストレーターの「委譲の規律」で、生成するサブエージェントを6つのフェーズエージェントに限定し、調査用・検証用の追加エージェントを禁じている
-- **レビューは絞り込ませず、フィルタは呼び出し元に置く** — 「重大な指摘のみ報告」「保守的に」といった指示はモデルが文字通り従って報告件数を落とす。`code-reviewer` には全件報告 + 深刻度タグ付けをさせ、どれがゲートになるかはオーケストレーターが決める
+- **レビューは絞り込ませず、フィルタは呼び出し元に置く** — 「重大な指摘のみ報告」「保守的に」といった指示はモデルが文字通り従って報告件数を落とす。レビューを担う Sonnet 5 は絞り込み指示への追従がさらに忠実で、「調査はしたが報告しない」という形で再現率が落ちるため、レビュアー定義には「この段階の目標はカバレッジであり、絞り込みは下流が行う」ことを明記する。`code-reviewer` には全件報告 + 深刻度タグ付けをさせ、どれがゲートになるかはオーケストレーターが決める。省いてよいものの基準は「重要なもの」のような質的な語ではなく具体的に書く（フォーマッタが管理する純粋な整形の好みのみ）
+- **指示の適用範囲を明示する** — Sonnet 5 は指示を文字通り・明示的に解釈し、1つの項目への指示を他の項目へ暗黙に一般化しない。広く適用したい指示は範囲を明示する（例:「変更した全サイドのテストスイートを実行」「すべての受け入れ基準を表に載せる」）
+- **ルールは実際の失敗モードに紐づける** — Claude 5 世代には過剰なガードレールがかえって判断を圧迫する。「〜しないこと」系のルールを増やすのは、モデルが自力で回避できない失敗モードが実際に観測された場合だけにする（lessons-learned がその記録装置）。判断で足りるところはルールの列挙ではなく判断基準で書く（例: コメント規則の箇条書きではなく「周辺コードのコメント密度・命名・イディオムに合わせる」）
+- **コンテキストは絞って渡し、実物を指し示す** — サブエージェントには lessons-learned / pipeline-config の該当フェーズの抜粋だけを渡し、前フェーズの成果物は本文を貼らずファイルパスで指し示す（要約の又聞きより実物の参照 — テストレポートのエラー出力を言い換えて渡さない）
 - **スコープを明示的に固定する** — 各フェーズに「依頼されたスコープのまま出す。より良い案があれば一文で述べたうえで依頼どおり進める」を持たせ、勝手な範囲拡大を防ぐ
 - **煽った言い回しを使わない** — `CRITICAL:` / `You MUST use this tool when...` のような強調はツールやスキルの過剰トリガーを招く。通常の指示文で書く
 

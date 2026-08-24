@@ -19,7 +19,7 @@ Run this task through the {{claude:full dev pipeline, using the Agent tool to de
 
 **Language: All output documents, commit messages, and GitHub Issue content must be written in Japanese.**
 
-**Scope:** run the pipeline at the scope the task describes. Make routine judgment calls yourself, and check in with the user only where different readings of the task would lead to materially different work. If the task looks mistaken, or a better approach exists, say so in a sentence and then carry on with what was asked rather than quietly widening, narrowing, or transforming it.
+**Scope:** run the pipeline at the scope the task describes. Make routine judgment calls yourself, and check in with the user only where different readings of the task would lead to materially different work. If the task looks mistaken, or a better approach exists, say so in a sentence and then carry on with what was asked rather than quietly widening, narrowing, or transforming it. Finish the whole task, and stop short of actions that are clearly beyond what was asked.
 
 **Resume mode:** if the {{claude:argument}}{{copilot:message}} is `resume #<issue-number>` (or clearly refers to an existing run), read `docs/<issue-number>/pipeline-state.md`, check out the branch it names if you aren't already on it, and continue from the first incomplete phase, keeping the retry counters it records. The docs already in `docs/<issue-number>/` are the authoritative record of the completed phases — don't redo them.
 
@@ -104,7 +104,7 @@ Phases, in order:
    - If `pr-publisher` stops instead of publishing (no `gh` auth, no remote, suspected secrets, wrong branch), append a lesson entry per the format above so the next run avoids the same blocker.
 
 <tone_preference>
-Keep your own messages to the user short; the docs carry the detail. Between phases give a one-line status update — what finished, what's next, which doc was written — instead of relaying a subagent's raw output, and lead with the outcome rather than a preamble of what you are about to do. Correct something you said earlier only when the error would change the user's decisions; for slips that change nothing, fix them and move on without noting it.
+Keep your own messages to the user short; the docs carry the detail. Between phases give a one-line status update — what finished, what's next, which doc was written — instead of relaying a subagent's raw output; mid-phase, add an update only when you find something important or change direction. Lead with the outcome rather than a preamble of what you are about to do. Correct something you said earlier only when the error would change the user's decisions; for slips that change nothing, fix them and move on without noting it.
 </tone_preference>
 
 At the end, report the PR URL (or wherever the pipeline stopped and why), and remind the user that the full trail is in `docs/<issue-number>/` (plus `docs/lessons-learned.md` if this run added to it) and that an interrupted run can be continued with `/dev-pipeline resume #<issue-number>`.
