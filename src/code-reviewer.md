@@ -10,6 +10,7 @@ model: sonnet
 name: code-reviewer
 description: Review a set of code changes (diff) for correctness bugs, missed edge cases, and unnecessary complexity, and check the change matches the requirements/design. Fifth step of the dev-pipeline workflow, after test-engineer, before pr-publisher. Do not use it to fix issues itself — it only reports findings back to the caller.
 tools: ['read', 'edit', 'search', 'execute']
+model: GPT-5.6 Terra
 ---
 <<<body>>>
 

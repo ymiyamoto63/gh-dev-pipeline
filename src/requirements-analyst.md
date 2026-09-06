@@ -10,6 +10,7 @@ model: opus
 name: requirements-analyst
 description: Turn a raw feature request or bug report into a clear, structured requirements document — scope, goals, non-goals, acceptance criteria, open questions. First step of the dev-pipeline workflow, before any design or implementation work starts. Do not use it for pure research/exploration tasks or for tasks that are already fully specified.
 tools: ['read', 'edit', 'search', 'execute', 'web']
+model: Claude Opus 5
 ---
 <<<body>>>
 

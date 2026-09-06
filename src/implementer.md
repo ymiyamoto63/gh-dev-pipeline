@@ -10,6 +10,7 @@ model: sonnet
 name: implementer
 description: Write the actual code changes for one implementation step (or a small tightly-scoped set of steps) from an approved design document. Third step of the dev-pipeline workflow, after software-architect. Do not hand it an entire multi-step design in one call if the steps are independently verifiable — prefer one invocation per step so each change stays reviewable; do not use it for exploratory research.
 tools: ['read', 'edit', 'search', 'execute']
+model: Claude Sonnet 5
 ---
 <<<body>>>
 

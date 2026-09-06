@@ -10,6 +10,7 @@ model: haiku
 name: pr-publisher
 description: Commit reviewed, working changes and open a pull request with a clear title and description. Final step of the dev-pipeline workflow, only after code-reviewer has found no blocking issues and the user has confirmed they want to publish. Never use it to push directly to main/master or to force-push.
 tools: ['read', 'edit', 'search', 'execute']
+model: Claude Haiku 4.5
 ---
 <<<body>>>
 

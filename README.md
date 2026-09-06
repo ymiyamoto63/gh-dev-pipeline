@@ -162,7 +162,20 @@ VS Code の Copilot Chat で:
 
 ### Claude Code 版との相違点
 
-- **モデル指定なし**: Claude Code 版は、精度が下流のリトライ回数を最も左右する `requirements-analyst` / `software-architect` を `opus`（Claude Opus 5）に、`implementer` / `test-engineer` / `code-reviewer` を `sonnet`（Claude Sonnet 5）に、機械的な git/gh 作業しかしない `pr-publisher` を `haiku` にしている（上流の要件・設計の質が上がると下流のリトライが減るため、難しいタスクではトークン総量でもむしろ安くつくことがある）。Copilot 版はモデルピッカーの選択に従う。フェーズごとに固定したい場合は各 `.agent.md` の frontmatter に `model: <モデル名>`（モデルピッカー表示名）を追記する。Claude Code 版でモデルを変えたい場合は、`src/<agent>.md` の claude 側 frontmatter の `model` を変更（親セッションのモデルを継承させるなら削除）して再生成する
+- **モデル割り当てが異なる**: 両版とも、精度が下流のリトライ回数を最も左右する上流フェーズに強いモデルを、機械的な作業しかしないフェーズに安いモデルを割り当てている（上流の要件・設計の質が上がると下流のリトライが減るため、難しいタスクではトークン総量でもむしろ安くつくことがある）。Copilot 版は複数ベンダーのモデルを選べるため、実装フェーズとレビューフェーズを別系統のモデルにしている — 同一ファミリのモデルは同じ盲点を共有するので、実装を書いたモデルとは別系統でレビューさせるほうが見落としが減る
+
+  | フェーズ | Claude Code 版 | Copilot 版 |
+  | --- | --- | --- |
+  | `dev-pipeline`（オーケストレーター） | 親セッションのモデル | Claude Opus 5 |
+  | `requirements-analyst` | `opus` | Claude Opus 5 |
+  | `software-architect` | `opus` | Claude Opus 5 |
+  | `implementer` | `sonnet` | Claude Sonnet 5 |
+  | `test-engineer` | `sonnet` | Claude Sonnet 5 |
+  | `code-reviewer` | `sonnet` | GPT-5.6 Terra |
+  | `pr-publisher` | `haiku` | Claude Haiku 4.5 |
+
+  Copilot 版の値は**モデルピッカーの表示名をそのまま書く**必要がある（`opus` のような抽象エイリアスは使えない）。組織のモデルポリシーで無効なモデルを指定するとエージェントの読み込み自体が失敗するので、モデル追加・廃止のたびに Copilot CLI の `/model` で実在する表示名を確認すること。VS Code の Copilot Chat はフォールバック指定として配列（`model: [A, B]`）も受け付けるが、Copilot CLI は文字列しか受け付けない（`Expected string, received array` で落ちる）ため、**スカラー文字列で書く**
+  変更するときは `src/<agent>.md` の該当 frontmatter（claude 側 / copilot 側）の `model` を編集して再生成する。Claude Code 版で親セッションのモデルを継承させたい場合は `model` 行を削除する
 - **ユーザー確認**: Claude Code の AskUserQuestion の代わりに、チャット上で直接質問して回答を待つ
 - **ツール名**: `tools` は VS Code の統一ツール名（`read` / `edit` / `search` / `execute` / `web` / `agent` / `todos`）を使用。未知のツール名は無視されるだけなので、旧名しか認識しない環境でも定義自体は壊れない
 - パイプラインの流れ・ブランチ運用・pipeline-state・pipeline-config・lessons-learned・リトライ予算は Claude Code 版と同一
