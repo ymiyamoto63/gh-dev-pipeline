@@ -10,6 +10,7 @@ description: Run a feature/bugfix through requirements -> design -> implementati
 argument-hint: <task description> | <path to an existing requirements doc> | resume #<issue-number>
 tools: ['read', 'edit', 'search', 'execute', 'agent', 'todos']
 agents: ['requirements-analyst', 'software-architect', 'implementer', 'test-engineer', 'code-reviewer', 'pr-publisher']
+model: Claude Opus 5
 ---
 <<<body>>>
 

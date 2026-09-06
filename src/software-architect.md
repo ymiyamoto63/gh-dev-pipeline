@@ -10,6 +10,7 @@ model: opus
 name: software-architect
 description: Turn an approved requirements document into a concrete implementation design/plan — files to touch, new modules, data flow, sequencing, risks. Second step of the dev-pipeline workflow, after requirements-analyst and before any code is written. Do not use it to write code, and do not use it when requirements are still ambiguous (send it back to requirements-analyst first).
 tools: ['read', 'edit', 'search', 'execute']
+model: Claude Opus 5
 ---
 <<<body>>>
 

@@ -10,6 +10,7 @@ model: sonnet
 name: test-engineer
 description: Write and/or run tests that verify an implementation against a requirements document's acceptance criteria, and report pass/fail with concrete evidence. Fourth step of the dev-pipeline workflow, after implementer, before code-reviewer. Do not use it to fix bugs it finds — it reports failures back to the caller, who routes them back to the implementer.
 tools: ['read', 'edit', 'search', 'execute']
+model: Claude Sonnet 5
 ---
 <<<body>>>
 
