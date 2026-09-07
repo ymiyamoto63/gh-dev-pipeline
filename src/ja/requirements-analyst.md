@@ -10,6 +10,7 @@ model: opus
 name: requirements-analyst
 description: 生の機能要望やバグ報告を、スコープ・目的・非目的・受け入れ基準・未決定事項を備えた明確で構造化された要件定義書に変換する。dev-pipelineワークフローの最初のステップで、設計や実装作業が始まる前に実行する。純粋な調査・探索タスクや、既に十分に仕様化されているタスクには使わないこと。
 tools: ['read', 'edit', 'search', 'execute', 'web']
+model: Claude Opus 5
 ---
 <<<body>>>
 

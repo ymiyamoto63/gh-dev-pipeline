@@ -10,6 +10,7 @@ description: 機能追加・バグ修正を、要件定義 → 設計 → 実装
 argument-hint: <タスクの説明> | <既存の要件定義書へのパス> | resume #<issue番号>
 tools: ['read', 'edit', 'search', 'execute', 'agent', 'todos']
 agents: ['requirements-analyst', 'software-architect', 'implementer', 'test-engineer', 'code-reviewer', 'pr-publisher']
+model: Claude Opus 5
 ---
 <<<body>>>
 

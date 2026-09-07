@@ -10,6 +10,7 @@ model: sonnet
 name: implementer
 description: 承認済みの設計書から、1つの実装ステップ（またはスコープを絞った小さなステップ群）の実際のコード変更を書く。dev-pipelineワークフローの3番目のステップで、software-architectの後に実行する。ステップごとに独立して検証可能な場合は、複数ステップからなる設計全体を一度に渡さないこと — 各変更をレビュー可能な状態に保つため、ステップごとに1回の呼び出しを優先する。探索的な調査には使わないこと。
 tools: ['read', 'edit', 'search', 'execute']
+model: Claude Sonnet 5
 ---
 <<<body>>>
 

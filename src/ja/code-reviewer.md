@@ -10,6 +10,7 @@ model: sonnet
 name: code-reviewer
 description: コード変更（diff）を正確性のバグ、見落とされたエッジケース、不要な複雑さの観点でレビューし、変更が要件・設計と一致しているかを確認する。dev-pipelineワークフローの5番目のステップで、test-engineerの後、pr-publisherの前に実行する。問題の修正には使わない — 発見事項を呼び出し元に報告するだけ。
 tools: ['read', 'edit', 'search', 'execute']
+model: GPT-5.6 Terra
 ---
 <<<body>>>
 

@@ -10,6 +10,7 @@ model: opus
 name: software-architect
 description: 承認済みの要件定義書を、具体的な実装設計・計画（変更対象ファイル、新規モジュール、データフロー、実施順序、リスク）に変換する。dev-pipelineワークフローの2番目のステップで、requirements-analystの後、コードを書く前に実行する。コードを書くためには使わないこと。また要件がまだ曖昧な場合には使わないこと（先にrequirements-analystに差し戻す）。
 tools: ['read', 'edit', 'search', 'execute']
+model: Claude Opus 5
 ---
 <<<body>>>
 
