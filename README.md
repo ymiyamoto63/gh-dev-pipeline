@@ -1,6 +1,6 @@
 # dev-pipeline
 
-カスタムサブエージェントを使い、要件定義 → 設計 → 実装 → テスト → レビュー → PR作成 の各工程を専任のサブエージェントに委譲する開発パイプライン。要件定義だけを人間との対話で詰め、承認後はエンドツーエンドでエージェントに委譲することを目的とする。要件定義書と設計書にはそれぞれ専任のレビュアーが付き、コードレビューはセキュリティ / テスト / 設計（構造）/ ルール準拠 の4つの観点別レビュアーに分かれている。Claude Code 版（`agents/` + `commands/`）と GitHub Copilot 版（`copilot/`）の2形式を提供する。
+カスタムサブエージェントを使い、要件定義 → 設計 → 実装 → テスト → レビュー → PR作成 の各工程を専任のサブエージェントに委譲する開発パイプライン。要件定義だけを人間との対話で詰め、承認後はエンドツーエンドでエージェントに委譲することを目的とする。要件定義書と設計書にはそれぞれ専任のレビュアーが付き、コードレビューはセキュリティ / テスト / 設計（構造）/ ルール準拠 の4つの観点別レビュアーに分かれている。Claude Code 版（`agents/` + `skills/`）と GitHub Copilot 版（`copilot/`）の2形式を提供する。
 
 ## 構成
 
@@ -21,8 +21,9 @@ dev-pipeline/
 │   ├── structure-reviewer.md     … コードレビュー: 設計（構造）（review-structure.md を出力）
 │   ├── convention-reviewer.md    … コードレビュー: ルール準拠（review-convention.md を出力）
 │   └── pr-publisher.md           … コミット・PR作成（pr-description.md を出力）
-├── commands/
-│   └── dev-pipeline.md           … 【生成物】上記11エージェントを順に呼び出すオーケストレーター（/dev-pipeline コマンド）
+├── skills/
+│   └── dev-pipeline/
+│       └── SKILL.md              … 【生成物】上記11エージェントを順に呼び出すオーケストレーター（/dev-pipeline スキル）
 ├── copilot/                      … GitHub Copilot 版（VS Code / Copilot CLI 用）
 │   ├── agents/                   … 【生成物】オーケストレーター + 11 フェーズエージェント（.agent.md）
 │   └── prompts/
@@ -88,23 +89,27 @@ dev-pipeline/
 
 ## インストール（Claude Code 版）
 
-Claude Code のユーザー設定ディレクトリ（`~/.claude/`）に配置する。
+Claude Code のユーザー設定ディレクトリ（`~/.claude/`）に配置する。オーケストレーターは `.claude/commands/` の旧形式ではなく、現在推奨されているスキル形式（`skills/dev-pipeline/SKILL.md`）で提供する。どちらも `/dev-pipeline` として起動でき、動作は同じ。
 
 ### Windows (PowerShell)
 
 ```powershell
+New-Item -ItemType Directory -Force "$HOME\.claude\agents", "$HOME\.claude\skills"
 Copy-Item agents\*.md "$HOME\.claude\agents\" -Force
-Copy-Item commands\*.md "$HOME\.claude\commands\" -Force
+Copy-Item skills\dev-pipeline "$HOME\.claude\skills\" -Recurse -Force
 ```
 
 ### macOS / Linux
 
 ```bash
+mkdir -p ~/.claude/agents ~/.claude/skills
 cp agents/*.md ~/.claude/agents/
-cp commands/*.md ~/.claude/commands/
+cp -r skills/dev-pipeline ~/.claude/skills/
 ```
 
-配置後、**Claude Code の再起動が必要**（サブエージェント/コマンドディレクトリの監視は、セッション開始時に存在していたディレクトリのみが対象のため）。
+特定のプロジェクトだけで使う場合は、そのリポジトリの `.claude/agents/` と `.claude/skills/` に同じものを置いてコミットする（同名の定義はプロジェクト側がユーザー側より優先される）。
+
+配置後、**Claude Code の再起動が必要**（サブエージェント/スキルディレクトリの監視は、セッション開始時に存在していたディレクトリのみが対象のため）。以前 `~/.claude/commands/dev-pipeline.md` を置いていた場合は削除する — 同名のスキルとコマンドが両方あるとスキル側が使われるが、二重に残す理由はない。
 
 ## 対象プロジェクト側の設定（pipeline-config.md・推奨）
 
@@ -183,6 +188,8 @@ VS Code の Copilot Chat で:
 
 オーケストレーターが `agents` frontmatter に列挙された11のフェーズエージェント（作成者6 + レビュアー5）をサブエージェントとして呼び出す（4つのコードレビュアーは環境が対応していれば並列）。各フェーズエージェントは単体でもドロップダウンから直接呼び出せる。
 
+12 個の `.agent.md` はすべて `disable-model-invocation: true` を持つ。これは「他のエージェントがサブエージェントとして勝手に選ばない」という指定で、フェーズエージェントを呼んでよいのはオーケストレーターだけ、オーケストレーター自身は誰のサブエージェントにもならない、という意図をそのまま表す。オーケストレーターは `agents` に11個を明示列挙しており、明示列挙はこの指定より優先されるため、パイプラインからの呼び出しは妨げられない。ユーザーがドロップダウンから直接選ぶことも妨げられない（それを止めるのは `user-invocable: false` であり、使っていない）。
+
 ### Claude Code 版との相違点
 
 - **モデル割り当てが異なる**: 両版とも、精度が下流のリトライ回数を最も左右する上流フェーズに強いモデルを、機械的な作業しかしないフェーズに安いモデルを割り当てている（上流の要件・設計の質が上がると下流のリトライが減るため、難しいタスクではトークン総量でもむしろ安くつくことがある）。Copilot 版は複数ベンダーのモデルを選べるため、作成フェーズとそのレビューフェーズを別系統のモデルにしている — 同一ファミリのモデルは同じ盲点を共有するので、要件・設計・実装を書いたモデルとは別系統でレビューさせるほうが見落としが減る（要件・設計のレビュアーも同じ理由で別系統にしている）
@@ -200,14 +207,15 @@ VS Code の Copilot Chat で:
   | `pr-publisher` | `haiku` | Claude Haiku 4.5 |
 
   Copilot 版の値は**モデルピッカーの表示名をそのまま書く**必要がある（`opus` のような抽象エイリアスは使えない）。組織のモデルポリシーで無効なモデルを指定するとエージェントの読み込み自体が失敗するので、モデル追加・廃止のたびに Copilot CLI の `/model` で実在する表示名を確認すること。VS Code の Copilot Chat はフォールバック指定として配列（`model: [A, B]`）も受け付けるが、Copilot CLI は文字列しか受け付けない（`Expected string, received array` で落ちる）ため、**スカラー文字列で書く**
-  変更するときは `src/<agent>.md` の該当 frontmatter（claude 側 / copilot 側）の `model` を編集して再生成する。Claude Code 版で親セッションのモデルを継承させたい場合は `model` 行を削除する
+  変更するときは `src/<agent>.md` の該当 frontmatter（claude 側 / copilot 側）の `model` を編集して再生成する。Claude Code 版で親セッションのモデルを継承させたい場合は `model` 行を削除する（または `inherit`）。Claude Code 版のエイリアスは現在 `opus` → Opus 5、`sonnet` → Sonnet 5、`haiku` → Haiku 4.5 に解決される。`fable`（Fable 5.1）と `best`（利用可能なら Fable、なければ Opus）も指定できるので、要件・設計フェーズをさらに強いモデルで回したい場合は上流4エージェントの `model` を `best` に変える — コストは上がるので、自分のタスクで効果を確認してから採用すること
 - **ユーザー確認**: Claude Code の AskUserQuestion の代わりに、チャット上で直接質問して回答を待つ
+- **サブエージェントの待ち方**: Claude Code の対話セッションではサブエージェントはバックグラウンドで走り、結果は完了通知として後のターンに届く（オーケストレーター定義の「サブエージェントの結果を待つ」はこれを前提にしている）。Copilot ではサブエージェント呼び出しが完了するまで返らないため、同じ文が「呼び出しが完了して初めて返ってくる」と生成される
 - **ツール名**: `tools` は VS Code の統一ツール名（`read` / `edit` / `search` / `execute` / `web` / `agent` / `todos`）を使用。未知のツール名は無視されるだけなので、旧名しか認識しない環境でも定義自体は壊れない
 - パイプラインの流れ・ブランチ運用・pipeline-state・pipeline-config・lessons-learned・リトライ予算は Claude Code 版と同一
 
 ## 2形式の生成（単一ソース）
 
-Claude 版（`agents/` + `commands/`）と Copilot 版（`copilot/agents/`）は `src/` の単一ソースから生成される。**編集するのは常に `src/` のみ**。生成物の先頭には自動生成である旨の注記が入っており、直接編集してはいけない（CI が検出して失敗する）。
+Claude 版（`agents/` + `skills/dev-pipeline/SKILL.md`）と Copilot 版（`copilot/agents/`）は `src/` の単一ソースから生成される。**編集するのは常に `src/` のみ**。生成物の先頭には自動生成である旨の注記が入っており、直接編集してはいけない（CI が検出して失敗する）。
 
 `src/<name>.md` は3つのセクションからなる:
 
@@ -237,10 +245,15 @@ push / PR 時には GitHub Actions（`generate-check.yml`）が両スクリプ�
 
 ## プロンプト設計の方針
 
-エージェント定義は Anthropic の [プロンプティングのベストプラクティス](https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/claude-prompting-best-practices)、[Claude Opus 5 のプロンプティング](https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/prompting-claude-opus-5)、[Claude Sonnet 5 のプロンプティング](https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/prompting-claude-sonnet-5)、および [Claude 5 世代のコンテキストエンジニアリングの新ルール](https://claudefa.st/blog/guide/mechanics/claude-5-context-engineering) に沿っている（要件定義・設計エージェントとそのレビュアーは Opus 5、実装・テスト・コードレビューは Sonnet 5 で動くため、両モデルのガイドが対象になる）。`src/` を編集する際は以下を崩さないこと。
+エージェント定義は Anthropic の [プロンプティングのベストプラクティス](https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/claude-prompting-best-practices)、[Claude Opus 5 のプロンプティング](https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/prompting-claude-opus-5)、[Claude Sonnet 5 のプロンプティング](https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/prompting-claude-sonnet-5)、[Claude Fable 5.1 のプロンプティング](https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/prompting-claude-fable-5-1)、および [Claude 5 世代のコンテキストエンジニアリングの新ルール](https://claudefa.st/blog/guide/mechanics/claude-5-context-engineering) に沿っている（要件定義・設計エージェントとそのレビュアーは Opus 5、実装・テスト・コードレビューは Sonnet 5 で動き、オーケストレーターは親セッションのモデル — Opus 5 のことも Fable 5.1 のこともある — で動くため、3つのガイドが対象になる）。Claude Code 側の定義形式は [サブエージェント](https://code.claude.com/docs/en/sub-agents) と [スキル](https://code.claude.com/docs/en/skills) のリファレンスに、Copilot 側は VS Code の [カスタムエージェント](https://code.visualstudio.com/docs/agent-customization/custom-agents) / [サブエージェント](https://code.visualstudio.com/docs/agents/run/subagents) のリファレンスに従う。`src/` を編集する際は以下を崩さないこと。
 
 - **成果物の分量を明示的に抑える** — Opus 5 はディスクに書くドキュメントが長くなりがちなので、文書を書く各フェーズに「中身は網羅しつつ埋め草・言い換えの要約・定型文は省く」旨を持たせている
-- **冗長なナレーションを抑える** — オーケストレーターの `<tone_preference>` ブロックで、フェーズ間は1行の状況報告に留め、前置きではなく結果から書き出させる。エフォート設定では応答の長さは制御できないため、プロンプトで明示する必要がある
+- **ナレーションは「短く」ではなく形で指定する** — オーケストレーターの `<communication>` ブロックは、いつ・何を報告するか（委譲直前の1行、フェーズ完了時の1行、ゲートでの要約、最後の総括）を肯定形で列挙する。Opus 5 は放っておくとナレーションが増え、Fable 5.1 は逆に減るが、どちらのガイドも「短くしろ」ではなく望む頻度と形を書けと指示しており、この書き方なら親セッションがどちらのモデルでも同じ挙動になる。エフォート設定では応答の長さは制御できないため、プロンプトで明示する必要がある。最後の総括は「ツール結果で確認できたことだけを報告し、未確認は未確認と書く」— 長時間の自律実行での進捗の捏造を防ぐための、ガイドにある文言をそのまま使っている
+- **止まるのはゲートだけ** — オーケストレーターの「立ち止まるのはゲートだけ」で、ユーザー入力を待ってよい場面を定義済みのゲートに限定し、「進めてよいか」の確認や「次に〜します」で終わるターンを禁じている。Claude 5 世代のガイドが挙げる「長いセッションの終盤で、実行すべきステップを述べただけでターンを終える」失敗モードへの対処で、auto モードの意味を守るために必要
+- **サブエージェントの結果を待つ** — Claude Code の対話セッションではサブエージェントは常にバックグラウンドで走り、結果は完了通知として後のターンに届く（フォアグラウンドは要求できない）。オーケストレーターには「通知が届くまで次の呼び出しをしない・結果を予測しない・代筆しない」を明記し、4つのコードレビュアーだけは同時に走らせて全部揃ってから読む、としている。フェーズエージェントが AskUserQuestion のようなバックグラウンドで使えないツールに依存しない構成（ユーザーへの質問はすべてオーケストレーターが行う）も、この前提から来ている
+- **説明文は自動委譲を誘わない** — Claude Code のサブエージェントの `description` は、Claude が自動で委譲先を選ぶ判断材料になる。フェーズエージェントは `~/.claude/agents/` にユーザー全体で置かれるため、`description` に「積極的に使え（PROACTIVELY）」を入れると、パイプラインと無関係なセッションでも呼ばれ得る。そのため各 `description` は「何をするか・dev-pipeline のどのフェーズでオーケストレーターが呼ぶか・何に使わないか」だけを書き、自動委譲を促す文言は入れない。Copilot 版は同じ意図を `disable-model-invocation: true` + オーケストレーターの `agents` 明示列挙で表す
+- **オーケストレーターはユーザーだけが起動する** — スキルの frontmatter に `disable-model-invocation: true` を付け、`/dev-pipeline` でのみ起動できるようにしている。Issue 作成・push・PR 作成という副作用のあるワークフローはユーザーが明示的に起動すべき、というスキルのガイドラインどおりで、副次的に説明文がセッションのコンテキストに常駐しなくなる
+- **エージェントの `memory` は使わない** — Claude Code のサブエージェントには永続メモリ（`memory: project` など）があるが、このパイプラインでは使わない。失敗の蓄積は `docs/lessons-learned.md` が担い、そこにはフェーズごとの節・重複統合・オーケストレーターによる抜粋という運用が既にあり、同じ役割を2箇所に持つと片方が静かに古くなる。エージェントメモリは Claude Code 版にしかないため、Copilot 版と挙動が分かれるのも避けたい
 - **検証指示を重ねない** — 「最終確認ステップを入れる」「回答を再確認する」「サブエージェントで検証する」といった指示は、Opus 5 が既に自前でやっていることと重複して過剰検証を招くので追加しないこと。検証は実コマンドを走らせる `implementer` / `test-engineer` の実作業としてのみ持たせる
 - **委譲に上限を設ける** — オーケストレーターの「委譲の規律」で、生成するサブエージェントを定義済みの11のフェーズエージェントに限定し、調査用や、定義済みレビュアー以外の検証用の追加エージェントを禁じている
 - **レビューは絞り込ませず、フィルタは呼び出し元に置く** — 「重大な指摘のみ報告」「保守的に」といった指示はモデルが文字通り従って報告件数を落とす。レビューを担う Sonnet 5 は絞り込み指示への追従がさらに忠実で、「調査はしたが報告しない」という形で再現率が落ちるため、レビュアー定義には「この段階の目標はカバレッジであり、絞り込みは下流が行う」ことを明記する。すべてのレビュアー（要件・設計・4観点のコードレビュー）には全件報告 + 深刻度タグ付けをさせ、どれがゲートになるかはオーケストレーターが決める。省いてよいものの基準は「重要なもの」のような質的な語ではなく具体的に書く（フォーマッタが管理する純粋な整形の好みのみ）
@@ -249,7 +262,7 @@ push / PR 時には GitHub Actions（`generate-check.yml`）が両スクリプ�
 - **コンテキストは絞って渡し、実物を指し示す** — サブエージェントには lessons-learned / pipeline-config の該当フェーズの抜粋だけを渡し、前フェーズの成果物は本文を貼らずファイルパスで指し示す（要約の又聞きより実物の参照 — テストレポートのエラー出力を言い換えて渡さない）
 - **レビュアーは観点を1つに絞る** — 4つのコードレビュアーには「他の観点に気づいても報告せず、自分の観点に集中する」と明記し、各観点の問いを最後まで追わせる。観点間の重なりで同じ箇所が複数のレポートに出ることは許容し、1件にまとめるのはオーケストレーターの仕事にする。pipeline-config の `## review` は4レビュアー全員に渡し、どの観点にも明確に属さない項目の受け皿を `convention-reviewer` と決めておく（受け皿を決めないと、全員が「他が拾う」と考えて落とす）
 - **スコープを明示的に固定する** — 各フェーズに「依頼されたスコープのまま出す。より良い案があれば一文で述べたうえで依頼どおり進める」を持たせ、勝手な範囲拡大を防ぐ
-- **煽った言い回しを使わない** — `CRITICAL:` / `You MUST use this tool when...` のような強調はツールやスキルの過剰トリガーを招く。通常の指示文で書く
+- **煽った言い回しを使わない** — `CRITICAL:` / `You MUST use this tool when...` / `PROACTIVELY` のような強調はツール・スキル・サブエージェントの過剰トリガーを招く。通常の指示文で書く
 
 ## 前提・制約
 

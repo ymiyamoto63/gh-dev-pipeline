@@ -31,7 +31,7 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 
 $pairs = @(
-    @{ Name = 'dev-pipeline';          Claude = 'commands/dev-pipeline.md';          Copilot = 'copilot/agents/dev-pipeline.agent.md' },
+    @{ Name = 'dev-pipeline';          Claude = 'skills/dev-pipeline/SKILL.md';     Copilot = 'copilot/agents/dev-pipeline.agent.md' },
     @{ Name = 'requirements-analyst';  Claude = 'agents/requirements-analyst.md';    Copilot = 'copilot/agents/requirements-analyst.agent.md' },
     @{ Name = 'requirements-reviewer'; Claude = 'agents/requirements-reviewer.md';   Copilot = 'copilot/agents/requirements-reviewer.agent.md' },
     @{ Name = 'software-architect';    Claude = 'agents/software-architect.md';      Copilot = 'copilot/agents/software-architect.agent.md' },
@@ -113,6 +113,7 @@ foreach ($p in $pairs) {
             if ($existing -ne $content) { $stale += $t.Rel } else { Write-Host "ok: $($t.Rel)" }
         }
         else {
+            $null = New-Item -ItemType Directory -Force -Path (Split-Path -Parent $outPath)
             [System.IO.File]::WriteAllText($outPath, $content, (New-Object System.Text.UTF8Encoding($false)))
             Write-Host "generated: $($t.Rel)"
         }

@@ -1,8 +1,9 @@
 ---
 name: software-architect
-description: 承認済みの要件定義書を、具体的な実装設計・計画（変更対象ファイル、新規モジュール、データフロー、実施順序、リスク）に変換する。dev-pipelineワークフローの2番目のステップで、requirements-analystの後、コードを書く前に実行する。コードを書くためには使わないこと。また要件がまだ曖昧な場合には使わないこと（先にrequirements-analystに差し戻す）。
+description: 承認済みの要件定義書を、具体的な実装設計（変更対象ファイル、APIコントラクト、実施順序、テスト戦略、ACマッピング、リスク）に変換する。dev-pipelineのフェーズ2で、requirements-analystの後、コードを書く前にオーケストレーターが呼び出す。コードを書くためには使わないこと。要件がまだ曖昧な場合は先にrequirements-analystに差し戻すこと。
 tools: ['read', 'edit', 'search', 'execute']
 model: Claude Opus 5
+disable-model-invocation: true
 ---
 <!-- 自動生成ファイル: src/software-architect.md から生成。編集は src/software-architect.md で行い tools/generate.ps1（または tools/generate.sh）を実行すること。このファイルを直接編集しないこと。 -->
 

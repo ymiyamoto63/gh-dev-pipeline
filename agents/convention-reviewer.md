@@ -1,6 +1,6 @@
 ---
 name: convention-reviewer
-description: コード変更（diff）をルール準拠の観点 — 周辺の既存コードとの適合（命名、配置、エラーハンドリング、イディオム）、プロジェクトのルール文書・lint設定への準拠、言語・フレームワークのベストプラクティス、pipeline configのスタック固有の欠陥パターン、依存関係の整合 — に絞ってレビューするために使うエージェント。dev-pipelineワークフローのフェーズ5で、test-engineerの後、pr-publisherの前に、他の3つの観点別レビュアー（security-reviewer / test-reviewer / structure-reviewer）と並行してPROACTIVELYに使用する。問題の修正には使わない — 発見事項を呼び出し元に報告するだけ。
+description: コード変更（diff）をルール準拠の観点 — 周辺の既存コードとの適合（命名、配置、エラーハンドリング、イディオム）、プロジェクトのルール文書・lint設定への準拠、言語・フレームワークのベストプラクティス、pipeline configのスタック固有の欠陥パターン、依存関係の整合 — に絞ってレビューする。dev-pipelineのフェーズ5で、test-engineerの後に、他の3つの観点別レビュアー（security-reviewer / test-reviewer / structure-reviewer）と並行してオーケストレーターが呼び出す。問題の修正には使わない — 発見事項を呼び出し元に報告するだけ。
 tools: Read, Write, Grep, Glob, Bash
 model: sonnet
 ---

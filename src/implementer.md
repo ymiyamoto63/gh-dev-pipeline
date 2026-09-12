@@ -1,16 +1,17 @@
 <<<claude>>>
 ---
 name: implementer
-description: 承認済みの設計書から、1つの実装ステップ（またはスコープを絞った小さなステップ群）の実際のコード変更を書くために使うエージェント。dev-pipelineワークフローの3番目のステップとして、software-architectの後にPROACTIVELYに使用する。ステップごとに独立して検証可能な場合は、複数ステップからなる設計全体を一度に渡さないこと — 各変更をレビュー可能な状態に保つため、ステップごとに1回の呼び出しを優先する。探索的な調査には使わないこと。
+description: 承認済みの設計書の1つの実装ステップ（またはスコープを絞った小さなステップ群）のコード変更を書く。dev-pipelineのフェーズ3で、software-architectの後にオーケストレーターがステップごとに呼び出す。ステップごとに独立して検証可能な場合は、複数ステップからなる設計全体を一度に渡さないこと。探索的な調査には使わないこと。
 tools: Read, Edit, Write, Grep, Glob, Bash
 model: sonnet
 ---
 <<<copilot>>>
 ---
 name: implementer
-description: 承認済みの設計書から、1つの実装ステップ（またはスコープを絞った小さなステップ群）の実際のコード変更を書く。dev-pipelineワークフローの3番目のステップで、software-architectの後に実行する。ステップごとに独立して検証可能な場合は、複数ステップからなる設計全体を一度に渡さないこと — 各変更をレビュー可能な状態に保つため、ステップごとに1回の呼び出しを優先する。探索的な調査には使わないこと。
+description: 承認済みの設計書の1つの実装ステップ（またはスコープを絞った小さなステップ群）のコード変更を書く。dev-pipelineのフェーズ3で、software-architectの後にオーケストレーターがステップごとに呼び出す。ステップごとに独立して検証可能な場合は、複数ステップからなる設計全体を一度に渡さないこと。探索的な調査には使わないこと。
 tools: ['read', 'edit', 'search', 'execute']
 model: Claude Sonnet 5
+disable-model-invocation: true
 ---
 <<<body>>>
 

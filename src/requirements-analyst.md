@@ -1,16 +1,17 @@
 <<<claude>>>
 ---
 name: requirements-analyst
-description: 生の機能要望やバグ報告を、スコープ・目的・非目的・受け入れ基準・未決定事項を備えた明確で構造化された要件定義書に変換するために使うエージェント。dev-pipelineワークフローの最初のステップとして、設計や実装作業が始まる前にPROACTIVELYに使用する。純粋な調査・探索タスク（代わりにExploreを使う）や、既に十分に仕様化されているタスクには使わないこと。
+description: 生の機能要望やバグ報告を、スコープ・影響範囲・非目的・受け入れ基準・未決定事項を備えた要件定義書に変換する。dev-pipelineのフェーズ1（設計や実装が始まる前）でオーケストレーターが呼び出す。純粋な調査・探索タスクや、既に十分に仕様化されているタスクには使わないこと。
 tools: Read, Write, Grep, Glob, Bash, WebFetch, WebSearch
 model: opus
 ---
 <<<copilot>>>
 ---
 name: requirements-analyst
-description: 生の機能要望やバグ報告を、スコープ・目的・非目的・受け入れ基準・未決定事項を備えた明確で構造化された要件定義書に変換する。dev-pipelineワークフローの最初のステップで、設計や実装作業が始まる前に実行する。純粋な調査・探索タスクや、既に十分に仕様化されているタスクには使わないこと。
+description: 生の機能要望やバグ報告を、スコープ・影響範囲・非目的・受け入れ基準・未決定事項を備えた要件定義書に変換する。dev-pipelineのフェーズ1（設計や実装が始まる前）でオーケストレーターが呼び出す。純粋な調査・探索タスクや、既に十分に仕様化されているタスクには使わないこと。
 tools: ['read', 'edit', 'search', 'execute', 'web']
 model: Claude Opus 5
+disable-model-invocation: true
 ---
 <<<body>>>
 

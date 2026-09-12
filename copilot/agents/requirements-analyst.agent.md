@@ -1,8 +1,9 @@
 ---
 name: requirements-analyst
-description: 生の機能要望やバグ報告を、スコープ・目的・非目的・受け入れ基準・未決定事項を備えた明確で構造化された要件定義書に変換する。dev-pipelineワークフローの最初のステップで、設計や実装作業が始まる前に実行する。純粋な調査・探索タスクや、既に十分に仕様化されているタスクには使わないこと。
+description: 生の機能要望やバグ報告を、スコープ・影響範囲・非目的・受け入れ基準・未決定事項を備えた要件定義書に変換する。dev-pipelineのフェーズ1（設計や実装が始まる前）でオーケストレーターが呼び出す。純粋な調査・探索タスクや、既に十分に仕様化されているタスクには使わないこと。
 tools: ['read', 'edit', 'search', 'execute', 'web']
 model: Claude Opus 5
+disable-model-invocation: true
 ---
 <!-- 自動生成ファイル: src/requirements-analyst.md から生成。編集は src/requirements-analyst.md で行い tools/generate.ps1（または tools/generate.sh）を実行すること。このファイルを直接編集しないこと。 -->
 

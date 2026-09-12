@@ -33,7 +33,7 @@ elif [[ $# -gt 0 ]]; then
 fi
 
 pairs=(
-  "dev-pipeline|commands/dev-pipeline.md|copilot/agents/dev-pipeline.agent.md"
+  "dev-pipeline|skills/dev-pipeline/SKILL.md|copilot/agents/dev-pipeline.agent.md"
   "requirements-analyst|agents/requirements-analyst.md|copilot/agents/requirements-analyst.agent.md"
   "requirements-reviewer|agents/requirements-reviewer.md|copilot/agents/requirements-reviewer.agent.md"
   "software-architect|agents/software-architect.md|copilot/agents/software-architect.agent.md"
@@ -120,6 +120,7 @@ for pair in "${pairs[@]}"; do
         stale+=("$out_path")
       fi
     else
+      mkdir -p "$(dirname "$out_path")"
       printf '%s' "$built" > "$out_path"
       echo "generated: $out_path"
     fi
