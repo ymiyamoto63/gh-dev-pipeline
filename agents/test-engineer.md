@@ -1,6 +1,6 @@
 ---
 name: test-engineer
-description: 実装が要件定義書の受け入れ基準を満たしているかを検証するテストを作成・実行し、具体的な根拠とともに合否を報告するために使うエージェント。dev-pipelineワークフローの4番目のステップとして、implementerの後、code-reviewerの前にPROACTIVELYに使用する。発見したバグの修正には使わないこと — 失敗を呼び出し元に報告し、呼び出し元がimplementerに差し戻す。
+description: 実装が要件定義書の受け入れ基準を満たしているかを検証するテストを作成・実行し、具体的な根拠とともに合否を報告するために使うエージェント。dev-pipelineワークフローの4番目のステップとして、implementerの後、観点別コードレビュアー（security-reviewer / test-reviewer / structure-reviewer / convention-reviewer）の前にPROACTIVELYに使用する。発見したバグの修正には使わないこと — 失敗を呼び出し元に報告し、呼び出し元がimplementerに差し戻す。
 tools: Read, Edit, Write, Grep, Glob, Bash
 model: sonnet
 ---

@@ -35,10 +35,15 @@ fi
 pairs=(
   "dev-pipeline|commands/dev-pipeline.md|copilot/agents/dev-pipeline.agent.md"
   "requirements-analyst|agents/requirements-analyst.md|copilot/agents/requirements-analyst.agent.md"
+  "requirements-reviewer|agents/requirements-reviewer.md|copilot/agents/requirements-reviewer.agent.md"
   "software-architect|agents/software-architect.md|copilot/agents/software-architect.agent.md"
+  "design-reviewer|agents/design-reviewer.md|copilot/agents/design-reviewer.agent.md"
   "implementer|agents/implementer.md|copilot/agents/implementer.agent.md"
   "test-engineer|agents/test-engineer.md|copilot/agents/test-engineer.agent.md"
-  "code-reviewer|agents/code-reviewer.md|copilot/agents/code-reviewer.agent.md"
+  "security-reviewer|agents/security-reviewer.md|copilot/agents/security-reviewer.agent.md"
+  "test-reviewer|agents/test-reviewer.md|copilot/agents/test-reviewer.agent.md"
+  "structure-reviewer|agents/structure-reviewer.md|copilot/agents/structure-reviewer.agent.md"
+  "convention-reviewer|agents/convention-reviewer.md|copilot/agents/convention-reviewer.agent.md"
   "pr-publisher|agents/pr-publisher.md|copilot/agents/pr-publisher.agent.md"
 )
 

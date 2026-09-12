@@ -1,6 +1,6 @@
 # Pipeline Config
 
-このファイルは対象プロジェクトの `docs/pipeline-config.md` にコピーして使う。dev-pipeline のオーケストレーターが実行開始時にこれを読み、`## stack` を全フェーズのサブエージェントに、`## commands` をビルド/テストを行うフェーズ（implementer / test-engineer）に、各フェーズ節（`## design` など）を対応するフェーズのサブエージェントにそのまま渡す。ここに書いた内容はデフォルト扱いであり、実リポジトリの規約・実装が常に優先される。以下は Vue 3 + Spring Boot スタックの例 — 対象プロジェクトに合わせて書き換えること。
+このファイルは対象プロジェクトの `docs/pipeline-config.md` にコピーして使う。dev-pipeline のオーケストレーターが実行開始時にこれを読み、`## stack` を全フェーズのサブエージェントに、`## commands` をビルド/テストを行うフェーズ（implementer / test-engineer）に、各フェーズ節を対応するフェーズのサブエージェントにそのまま渡す — `## requirements` は requirements-analyst と requirements-reviewer に、`## design` は software-architect と design-reviewer に、`## implementation` は implementer に、`## testing` は test-engineer に、`## review` は4つの観点別コードレビュアー（security-reviewer / test-reviewer / structure-reviewer / convention-reviewer）全員に（各レビュアーは自分の観点に関係する項目だけを適用し、どの観点にも明確に属さないスタック固有の欠陥パターンは convention-reviewer が担当する）、`## publish` は pr-publisher に。ここに書いた内容はデフォルト扱いであり、実リポジトリの規約・実装が常に優先される。以下は Vue 3 + Spring Boot スタックの例 — 対象プロジェクトに合わせて書き換えること。
 
 ## stack
 

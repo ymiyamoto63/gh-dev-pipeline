@@ -33,10 +33,15 @@ $root = Split-Path -Parent $PSScriptRoot
 $pairs = @(
     @{ Name = 'dev-pipeline';          Claude = 'commands/dev-pipeline.md';          Copilot = 'copilot/agents/dev-pipeline.agent.md' },
     @{ Name = 'requirements-analyst';  Claude = 'agents/requirements-analyst.md';    Copilot = 'copilot/agents/requirements-analyst.agent.md' },
+    @{ Name = 'requirements-reviewer'; Claude = 'agents/requirements-reviewer.md';   Copilot = 'copilot/agents/requirements-reviewer.agent.md' },
     @{ Name = 'software-architect';    Claude = 'agents/software-architect.md';      Copilot = 'copilot/agents/software-architect.agent.md' },
+    @{ Name = 'design-reviewer';       Claude = 'agents/design-reviewer.md';         Copilot = 'copilot/agents/design-reviewer.agent.md' },
     @{ Name = 'implementer';           Claude = 'agents/implementer.md';             Copilot = 'copilot/agents/implementer.agent.md' },
     @{ Name = 'test-engineer';         Claude = 'agents/test-engineer.md';           Copilot = 'copilot/agents/test-engineer.agent.md' },
-    @{ Name = 'code-reviewer';         Claude = 'agents/code-reviewer.md';           Copilot = 'copilot/agents/code-reviewer.agent.md' },
+    @{ Name = 'security-reviewer';     Claude = 'agents/security-reviewer.md';       Copilot = 'copilot/agents/security-reviewer.agent.md' },
+    @{ Name = 'test-reviewer';         Claude = 'agents/test-reviewer.md';           Copilot = 'copilot/agents/test-reviewer.agent.md' },
+    @{ Name = 'structure-reviewer';    Claude = 'agents/structure-reviewer.md';      Copilot = 'copilot/agents/structure-reviewer.agent.md' },
+    @{ Name = 'convention-reviewer';   Claude = 'agents/convention-reviewer.md';     Copilot = 'copilot/agents/convention-reviewer.agent.md' },
     @{ Name = 'pr-publisher';          Claude = 'agents/pr-publisher.md';            Copilot = 'copilot/agents/pr-publisher.agent.md' }
 )
 
