@@ -4,48 +4,48 @@
 
 ## stack
 
-SPA with a Vue 3 + TypeScript + Pinia + Vuetify + Vite + pnpm frontend and a Java Spring Boot + Flyway + PostgreSQL backend, developed inside a devcontainer. If a needed tool is missing, report it — don't install it.
+フロントエンドは Vue 3 + TypeScript + Pinia + Vuetify + Vite + pnpm、バックエンドは Java Spring Boot + Flyway + PostgreSQL の SPA。開発は devcontainer 内で行う。必要なツールが無い場合は、インストールせずに報告すること。
 
 ## commands
 
-Verified build/test commands. The pipeline passes these to every phase that builds or tests, as fixed values — agents run them as given instead of re-discovering them from the repo (if one doesn't work, they report it).
+検証済みのビルド/テストコマンド。パイプラインはこれをビルドやテストを行う全フェーズに確定値として渡す — エージェントはリポジトリから再発見せず、ここに書かれたとおりに実行する（動かない場合は報告する）。
 
-- frontend: typecheck `pnpm vue-tsc --noEmit` / lint `pnpm lint` / test `pnpm test`
-- backend: compile `./mvnw compile` / test `./mvnw test`
+- フロントエンド: 型チェック `pnpm vue-tsc --noEmit` / lint `pnpm lint` / テスト `pnpm test`
+- バックエンド: コンパイル `./mvnw compile` / テスト `./mvnw test`
 
 ## requirements
 
-- For a full-stack change, name the affected layers explicitly: UI components / frontend state (Pinia stores) / API client / backend API / backend service logic / DB schema.
-- When both frontend and backend behavior change, write separate acceptance criteria for the API behavior and the UI behavior rather than one merged criterion.
+- フルスタックの変更では、影響を受ける層を具体的に名指しすること: UIコンポーネント / フロントエンド状態（Pinia ストア）/ APIクライアント / バックエンドAPI / バックエンドのサービスロジック / DBスキーマ。
+- フロントエンドとバックエンドの両方の挙動が変わる場合は、1つにまとめず、APIの挙動とUIの挙動それぞれに受け入れ基準を書くこと。
 
 ## design
 
-- If the change crosses the frontend/backend boundary, the design MUST pin the API contract before anything else: endpoint path + HTTP method, request/response shapes (field names, types, nullability — concrete enough to write both the Java DTO and the TypeScript type from), and error responses.
-- DB schema changes are expressed as new Flyway migrations only (`V<next>__<description>.sql` in the migration directory the repo already uses). Never plan an edit to an already-applied migration.
-- Sequence steps in dependency order: Flyway migration → backend (entity/repository/service/controller) → frontend (API client → Pinia store/composables → UI components). Each step must leave the repo compiling.
-- Respect the repo's existing layering on both sides (controller/service/repository; components/composables/stores) and name the concrete files — don't leave the implementer to invent placement.
+- 変更がフロントエンド/バックエンド境界をまたぐ場合、設計は他の何よりも先に API コントラクトを確定すること: エンドポイントのパス + HTTPメソッド、リクエスト/レスポンスの形状（フィールド名、型、null許容性 — Java の DTO と TypeScript の型の両方をそこから書き起こせる具体度で）、エラーレスポンス。
+- DBスキーマの変更は Flyway マイグレーションの新規追加のみで表現すること（リポジトリが既に使っているマイグレーションディレクトリに `V<次番号>__<説明>.sql`）。適用済みマイグレーションの編集を計画しないこと。
+- ステップは依存関係の順序で並べること: Flyway マイグレーション → バックエンド（entity/repository/service/controller）→ フロントエンド（APIクライアント → Pinia ストア/composable → UIコンポーネント）。各ステップ後もリポジトリがコンパイルできる状態を保つこと。
+- 両サイドともリポジトリ既存のレイヤリング（controller/service/repository、components/composables/stores）に従い、具体的なファイル名を挙げること — 配置を実装者に発明させないこと。
 
 ## implementation
 
-- Frontend: use `<script setup lang="ts">` SFCs; keep shared state in Pinia stores and use `storeToRefs` when destructuring reactive store state; prefer Vuetify components and props over hand-rolled CSS; never introduce `any` or `as` casts to silence type errors — fix the types.
-- Backend: constructor injection (no field `@Autowired`); transaction boundaries (`@Transactional`) at the service layer; don't return JPA entities from controllers — use the repo's DTO pattern; validate request input the way the repo already does (`@Valid` etc.).
-- DB: schema changes only as a new Flyway migration (`V<next>__<description>.sql`); never modify an already-applied migration file.
-- Verification: typically typecheck (`vue-tsc`) + lint for frontend changes, compile (`./mvnw compile` or gradle equivalent) for backend changes.
+- フロントエンド: SFC は `<script setup lang="ts">` を使う。共有状態は Pinia ストアに置き、リアクティブなストアの状態を分割代入するときは `storeToRefs` を使う。手書きの CSS より Vuetify のコンポーネントと props を優先する。型エラーを黙らせるための `any` や `as` キャストは持ち込まず、型そのものを直すこと。
+- バックエンド: コンストラクタインジェクション（フィールドへの `@Autowired` は使わない）。トランザクション境界（`@Transactional`）はサービス層に置く。コントローラから JPA エンティティを返さず、リポジトリの DTO パターンに従う。リクエスト入力のバリデーションはリポジトリ既存のやり方（`@Valid` など）に合わせる。
+- DB: スキーマ変更は Flyway マイグレーションの新規追加のみ（`V<次番号>__<説明>.sql`）。適用済みのマイグレーションファイルは決して変更しないこと。
+- 検証: 通常、フロントエンドの変更では型チェック（`vue-tsc`）+ lint、バックエンドの変更ではコンパイル（`./mvnw compile` または gradle 相当）。
 
 ## testing
 
-- Frontend: Vitest, with @vue/test-utils or Testing Library per repo convention, for components; Pinia stores can be tested directly (`setActivePinia(createPinia())`) without mounting a component.
-- Backend: JUnit 5; prefer the narrowest Spring test slice that proves the criterion (`@WebMvcTest` for controllers, `@DataJpaTest` for repositories, full `@SpringBootTest` only when the criterion genuinely spans layers); use Testcontainers for PostgreSQL if the repo already does.
-- If a Flyway migration was added, confirm it applies cleanly — a backend test run against a fresh database usually proves this; if migrations fail to apply, that is a test failure.
+- フロントエンド: コンポーネントは Vitest で、リポジトリの規約に従って @vue/test-utils または Testing Library を使う。Pinia ストアはコンポーネントをマウントせず直接テストできる（`setActivePinia(createPinia())`）。
+- バックエンド: JUnit 5。基準を証明できる最小の Spring テストスライスを選ぶこと（コントローラは `@WebMvcTest`、リポジトリは `@DataJpaTest`、基準が本当に層をまたぐ場合のみフルの `@SpringBootTest`）。リポジトリが既に使っていれば PostgreSQL に Testcontainers を使う。
+- Flyway マイグレーションを追加した場合は、クリーンに適用できることを確認すること — 通常はまっさらなデータベースに対するバックエンドのテスト実行で確認できる。マイグレーションの適用失敗はテストの失敗である。
 
 ## review
 
-- Frontend: reactivity loss (destructuring a Pinia store or reactive object without `storeToRefs`/`toRefs`), missing `await` on a promise whose result or error matters, watchers/intervals/listeners registered without cleanup, `v-for` without a stable `:key`, state mutated outside its Pinia store, `any`/`as` casts papering over a real type mismatch.
-- Backend: N+1 queries (lazy relations accessed in loops or during serialization), missing or misplaced `@Transactional` (multi-write operations without one; one on a read-only path hiding a write), JPA entities returned directly from controllers, string-concatenated SQL/JPQL, new endpoints without input validation, error responses leaking stack traces or internals.
-- DB: any edit to an already-applied Flyway migration (checksum break on deploy), migration content not matching the entity changes.
-- Dependencies: `package.json` changed without a matching `pnpm-lock.yaml` change (or vice versa).
+- フロントエンド: リアクティビティの喪失（Pinia ストアやリアクティブなオブジェクトを `storeToRefs`/`toRefs` なしで分割代入している）、結果やエラーが意味を持つ Promise への `await` 漏れ、クリーンアップなしで登録された watcher/interval/listener、安定した `:key` のない `v-for`、Pinia ストア外での状態の書き換え、本物の型不一致を覆い隠す `any`/`as` キャスト。
+- バックエンド: N+1 クエリ（ループ内やシリアライズ時の遅延関連の参照）、`@Transactional` の欠落や誤配置（複数の書き込みを伴う操作に付いていない、読み取り専用のはずの経路に付いていて書き込みを隠している）、コントローラから直接返される JPA エンティティ、文字列連結による SQL/JPQL、入力バリデーションのない新規エンドポイント、スタックトレースや内部情報を漏らすエラーレスポンス。
+- DB: 適用済み Flyway マイグレーションへの変更（デプロイ時にチェックサムが壊れる）、マイグレーションの内容とエンティティの変更の不一致。
+- 依存関係: `package.json` が変更されたのに `pnpm-lock.yaml` が変更されていない（あるいはその逆）。
 
 ## publish
 
-- If `package.json` changed, `pnpm-lock.yaml` must be committed with it (and vice versa).
-- If the change includes Flyway migration files, call them out explicitly in the PR body — they alter the database schema on deploy and reviewers must see them.
+- `package.json` を変更した場合、`pnpm-lock.yaml` も一緒にコミットすること（逆も同様）。
+- 変更に Flyway マイグレーションファイルが含まれる場合、PR 本文で明示的に触れること — デプロイ時にデータベーススキーマを変更するものであり、レビュアーが必ず気づく必要がある。
