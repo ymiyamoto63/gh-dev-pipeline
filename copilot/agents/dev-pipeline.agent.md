@@ -117,7 +117,7 @@ gh api repos/{owner}/{repo}/issues/<issue番号>/comments \
    - レビューのループが収束したら（要修正の指摘が残っていない、またはリトライ予算を使い切った）、指摘をIssueに投稿すること: `## レビュー結果`見出しに、4つのレポート（`review-security.md`、`review-test.md`、`review-structure.md`、`review-convention.md` — 各レポートは自分の観点の`###`見出しで始まる）を続けた一時ファイルをシェルの連結で組み立て、`gh issue comment <issue番号> --body-file <ファイル>`で投稿する。ラウンドごとに投稿するのではなく、最終ラウンドの指摘を一度だけ投稿し、どれを修正しどれを任意として残したかを併記すること。このコメントがレビューの正本となる。
 
 6. **公開（Publish）** — autoモードであっても、常にまずチャットで、返信を待って明示的な確認をユーザーに求めること（これはリモートへのpushとPRのオープンという、目に見える、後戻りしにくい操作であるため）。確認が得られたら、`.scratch/<issue番号>/requirements.md`、`.scratch/<issue番号>/design.md`、`.scratch/<issue番号>/test-report.md`を指し示し、ベースSHAとissue番号を渡して`pr-publisher`エージェントをサブエージェントとして呼び出す。未コミットのまま残っているコードをコミットし（パイプライン自身の文書は無視されており、コミットに入ることはない）、`.scratch/<issue番号>/pr-description.md`を保存し、pushして、Issueがマージ時に自動的にクローズされるよう本文に`Closes #<issue番号>`を入れてPRを開く。
-   - PR作成後: Issueに（`gh issue comment`で）テスト結果の一文要約とPR URLを添えたクロージングコメントを投稿し、`pipeline-state.md`とstateコメントのフェーズ6を完了にマークすること — これについてコミットするものはない。
+   - PR作成後: Issueにクロージングコメントを投稿すること: `## テスト結果`見出しに`.scratch/<issue番号>/test-report.md`（最新の実行のもの）を続け、末尾にPR URLを添えた一時ファイルをシェルの連結で組み立て、`gh issue comment <issue番号> --body-file <ファイル>`で投稿する — 文書の内容をコマンドラインに貼り付けたり、投稿のためだけにファイルを読んだりしないこと。テストコードにはAC IDを書かないので、受け入れ基準と実テストの対応が残る場所はこのコメントのカバレッジ表だけである。投稿後、`pipeline-state.md`とstateコメントのフェーズ6を完了にマークすること — これについてコミットするものはない。
    - `pr-publisher`が公開せずに停止した場合（`gh`未認証、リモートなし、秘密情報の疑い、誤ったブランチ）、次回の実行が同じブロッカーに引っかからないよう、上記の形式でlessonエントリを追記すること。
 
 <tone_preference>
