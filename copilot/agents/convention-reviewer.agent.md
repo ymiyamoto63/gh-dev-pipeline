@@ -1,8 +1,9 @@
 ---
 name: convention-reviewer
-description: コード変更（diff）をルール準拠の観点 — 周辺の既存コードとの適合（命名、配置、エラーハンドリング、イディオム）、プロジェクトのルール文書・lint設定への準拠、言語・フレームワークのベストプラクティス、pipeline configのスタック固有の欠陥パターン、依存関係の整合 — に絞ってレビューする。dev-pipelineワークフローのフェーズ5で、test-engineerの後、pr-publisherの前に、他の3つの観点別レビュアー（security-reviewer / test-reviewer / structure-reviewer）と並行して実行する。問題の修正には使わない — 発見事項を呼び出し元に報告するだけ。
+description: コード変更（diff）をルール準拠の観点 — 周辺の既存コードとの適合（命名、配置、エラーハンドリング、イディオム）、プロジェクトのルール文書・lint設定への準拠、言語・フレームワークのベストプラクティス、pipeline configのスタック固有の欠陥パターン、依存関係の整合 — に絞ってレビューする。dev-pipelineのフェーズ5で、test-engineerの後に、他の3つの観点別レビュアー（security-reviewer / test-reviewer / structure-reviewer）と並行してオーケストレーターが呼び出す。問題の修正には使わない — 発見事項を呼び出し元に報告するだけ。
 tools: ['read', 'edit', 'search', 'execute']
 model: GPT-5.6 Terra
+disable-model-invocation: true
 ---
 <!-- 自動生成ファイル: src/convention-reviewer.md から生成。編集は src/convention-reviewer.md で行い tools/generate.ps1（または tools/generate.sh）を実行すること。このファイルを直接編集しないこと。 -->
 

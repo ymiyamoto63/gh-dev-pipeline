@@ -1,8 +1,9 @@
 ---
 name: pr-publisher
-description: レビュー済みで動作する変更をコミットし、明確なタイトルと説明を付けてプルリクエストを開く。dev-pipelineワークフローの最終ステップで、観点別コードレビュアーが要修正の問題を残しておらず、ユーザーが公開を希望することを確認した後にのみ実行する。main/masterへの直接pushやforce-pushには絶対に使わないこと。
+description: レビュー済みで動作する変更をコミットし、明確なタイトルと説明を付けてプルリクエストを開く。dev-pipelineの最終フェーズで、観点別コードレビュアーが要修正の問題を残しておらず、ユーザーが公開を希望することを確認した後にのみオーケストレーターが呼び出す。main/masterへの直接pushやforce-pushには使わないこと。
 tools: ['read', 'edit', 'search', 'execute']
 model: Claude Haiku 4.5
+disable-model-invocation: true
 ---
 <!-- 自動生成ファイル: src/pr-publisher.md から生成。編集は src/pr-publisher.md で行い tools/generate.ps1（または tools/generate.sh）を実行すること。このファイルを直接編集しないこと。 -->
 

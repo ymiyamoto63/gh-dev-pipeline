@@ -1,6 +1,6 @@
 ---
 name: structure-reviewer
-description: コード変更（diff）を設計の観点 — 1ファイル1責務、機能・モジュール・層の境界の遵守、クライアント/サーバー間コントラクトの一致、設計書との整合、既存の抽象化の再発明、不要な複雑さ — に絞ってレビューするために使うエージェント。dev-pipelineワークフローのフェーズ5で、test-engineerの後、pr-publisherの前に、他の3つの観点別レビュアー（security-reviewer / test-reviewer / convention-reviewer）と並行してPROACTIVELYに使用する。問題の修正には使わない — 発見事項を呼び出し元に報告するだけ。
+description: コード変更（diff）を設計の観点 — 1ファイル1責務、機能・モジュール・層の境界の遵守、クライアント/サーバー間コントラクトの一致、設計書との整合、既存の抽象化の再発明、不要な複雑さ — に絞ってレビューする。dev-pipelineのフェーズ5で、test-engineerの後に、他の3つの観点別レビュアー（security-reviewer / test-reviewer / convention-reviewer）と並行してオーケストレーターが呼び出す。問題の修正には使わない — 発見事項を呼び出し元に報告するだけ。
 tools: Read, Write, Grep, Glob, Bash
 model: sonnet
 ---

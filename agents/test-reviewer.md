@@ -1,6 +1,6 @@
 ---
 name: test-reviewer
-description: コード変更（diff）をテストの観点 — 変更した各振る舞いに対応するテストの有無、何も検証していない骨抜きテストの検出、既存テストの不当な弱体化、受け入れ基準と実テストコードの突き合わせ — に絞ってレビューするために使うエージェント。dev-pipelineワークフローのフェーズ5で、test-engineerの後、pr-publisherの前に、他の3つの観点別レビュアー（security-reviewer / structure-reviewer / convention-reviewer）と並行してPROACTIVELYに使用する。テストの作成や修正には使わない — 発見事項を呼び出し元に報告するだけ。
+description: コード変更（diff）をテストの観点 — 変更した各振る舞いに対応するテストの有無、何も検証していない骨抜きテストの検出、既存テストの不当な弱体化、受け入れ基準と実テストコードの突き合わせ — に絞ってレビューする。dev-pipelineのフェーズ5で、test-engineerの後に、他の3つの観点別レビュアー（security-reviewer / structure-reviewer / convention-reviewer）と並行してオーケストレーターが呼び出す。テストの作成や修正には使わない — 発見事項を呼び出し元に報告するだけ。
 tools: Read, Write, Grep, Glob, Bash
 model: sonnet
 ---

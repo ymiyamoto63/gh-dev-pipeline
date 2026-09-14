@@ -1,8 +1,9 @@
 ---
 name: requirements-reviewer
-description: 要件定義書を、受け入れ基準のテスト可能性、スコープ・非目的・基準の間の矛盾や漏れ、影響範囲・制約とリポジトリの実態との一致、隠れた曖昧さの観点でレビューする。dev-pipelineワークフローのフェーズ1で、requirements-analystが文書を書いた後、ユーザーの承認ゲートの前に実行する。文書の修正には使わない — 発見事項を呼び出し元に報告するだけ。
+description: 要件定義書を、受け入れ基準のテスト可能性、スコープ・非目的・基準の間の矛盾や漏れ、影響範囲・制約とリポジトリの実態との一致、隠れた曖昧さの観点でレビューする。dev-pipelineのフェーズ1で、requirements-analystが文書を書いた後、承認ゲートの前にオーケストレーターが呼び出す。文書の修正には使わない — 発見事項を呼び出し元に報告するだけ。
 tools: ['read', 'edit', 'search', 'execute']
 model: GPT-5.6 Terra
+disable-model-invocation: true
 ---
 <!-- 自動生成ファイル: src/requirements-reviewer.md から生成。編集は src/requirements-reviewer.md で行い tools/generate.ps1（または tools/generate.sh）を実行すること。このファイルを直接編集しないこと。 -->
 

@@ -1,16 +1,17 @@
 <<<claude>>>
 ---
 name: test-engineer
-description: 実装が要件定義書の受け入れ基準を満たしているかを検証するテストを作成・実行し、具体的な根拠とともに合否を報告するために使うエージェント。dev-pipelineワークフローの4番目のステップとして、implementerの後、観点別コードレビュアー（security-reviewer / test-reviewer / structure-reviewer / convention-reviewer）の前にPROACTIVELYに使用する。発見したバグの修正には使わないこと — 失敗を呼び出し元に報告し、呼び出し元がimplementerに差し戻す。
+description: 実装が要件定義書の受け入れ基準を満たしているかを検証するテストを作成・実行し、実際のコマンド出力を根拠に合否を報告する。dev-pipelineのフェーズ4で、implementerの後、観点別コードレビュアーの前にオーケストレーターが呼び出す。発見したバグの修正には使わないこと — 失敗を呼び出し元に報告し、呼び出し元がimplementerに差し戻す。
 tools: Read, Edit, Write, Grep, Glob, Bash
 model: sonnet
 ---
 <<<copilot>>>
 ---
 name: test-engineer
-description: 実装が要件定義書の受け入れ基準を満たしているかを検証するテストを作成・実行し、具体的な根拠とともに合否を報告する。dev-pipelineワークフローの4番目のステップで、implementerの後、観点別コードレビュアー（security-reviewer / test-reviewer / structure-reviewer / convention-reviewer）の前に実行する。発見したバグの修正には使わないこと — 失敗を呼び出し元に報告し、呼び出し元がimplementerに差し戻す。
+description: 実装が要件定義書の受け入れ基準を満たしているかを検証するテストを作成・実行し、実際のコマンド出力を根拠に合否を報告する。dev-pipelineのフェーズ4で、implementerの後、観点別コードレビュアーの前にオーケストレーターが呼び出す。発見したバグの修正には使わないこと — 失敗を呼び出し元に報告し、呼び出し元がimplementerに差し戻す。
 tools: ['read', 'edit', 'search', 'execute']
 model: Claude Sonnet 5
+disable-model-invocation: true
 ---
 <<<body>>>
 
