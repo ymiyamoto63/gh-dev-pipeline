@@ -1,6 +1,21 @@
 # Pipeline Config
 
-このファイルは対象プロジェクトの `docs/pipeline-config.md` にコピーして使う。dev-pipeline のオーケストレーターが実行開始時にこれを読み、`## stack` を全フェーズのサブエージェントに、`## commands` をビルド/テストを行うフェーズ（implementer / test-engineer）に、各フェーズ節を対応するフェーズのサブエージェントにそのまま渡す — `## requirements` は requirements-analyst と requirements-reviewer に、`## design` は software-architect と design-reviewer に、`## implementation` は implementer に、`## testing` は test-engineer に、`## review` は4つの観点別コードレビュアー（security-reviewer / test-reviewer / structure-reviewer / convention-reviewer）全員に（各レビュアーは自分の観点に関係する項目だけを適用し、どの観点にも明確に属さないスタック固有の欠陥パターンは convention-reviewer が担当する）、`## publish` は pr-publisher に。ここに書いた内容はデフォルト扱いであり、実リポジトリの規約・実装が常に優先される。以下は Vue 3 + Spring Boot スタックの例 — 対象プロジェクトに合わせて書き換えること。
+このファイルは対象プロジェクトの `docs/pipeline-config.md` にコピーして使う。dev-pipeline のオーケストレーターが実行開始時にこれを読み、各節を対応するフェーズのサブエージェントにそのまま渡す。
+
+| 節 | 渡される先 |
+| --- | --- |
+| `## stack` | 全フェーズのサブエージェント |
+| `## commands` | ビルド/テストを行うフェーズ（implementer / test-engineer） |
+| `## requirements` | requirements-analyst、requirements-reviewer |
+| `## design` | software-architect、design-reviewer |
+| `## implementation` | implementer |
+| `## testing` | test-engineer |
+| `## review` | 4つの観点別コードレビュアー（security-reviewer / test-reviewer / structure-reviewer / convention-reviewer）全員 |
+| `## publish` | pr-publisher |
+
+`## review` は4人のレビュアー全員に渡る。各レビュアーは自分の観点に関係する項目だけを適用し、どの観点にも明確に属さないスタック固有の欠陥パターンは convention-reviewer が担当する。
+
+ここに書いた内容はデフォルトであり、実リポジトリの規約・実装が常に優先される。以下は Vue 3 + Spring Boot スタックの例。対象プロジェクトに合わせて書き換えること。
 
 ## stack
 
@@ -8,7 +23,7 @@
 
 ## commands
 
-検証済みのビルド/テストコマンド。パイプラインはこれをビルドやテストを行う全フェーズに確定値として渡す — エージェントはリポジトリから再発見せず、ここに書かれたとおりに実行する（動かない場合は報告する）。
+検証済みのビルド/テストコマンド。パイプラインはこれを、ビルドやテストを行う全フェーズに確定値として渡す。エージェントはリポジトリから再発見せず、ここに書かれたとおりに実行する。動かない場合は報告する。
 
 - フロントエンド: 型チェック `pnpm vue-tsc --noEmit` / lint `pnpm lint` / テスト `pnpm test`
 - バックエンド: コンパイル `./mvnw compile` / テスト `./mvnw test`
@@ -20,32 +35,32 @@
 
 ## design
 
-- 変更がフロントエンド/バックエンド境界をまたぐ場合、設計は他の何よりも先に API コントラクトを確定すること: エンドポイントのパス + HTTPメソッド、リクエスト/レスポンスの形状（フィールド名、型、null許容性 — Java の DTO と TypeScript の型の両方をそこから書き起こせる具体度で）、エラーレスポンス。
-- DBスキーマの変更は Flyway マイグレーションの新規追加のみで表現すること（リポジトリが既に使っているマイグレーションディレクトリに `V<次番号>__<説明>.sql`）。適用済みマイグレーションの編集を計画しないこと。
+- 変更がフロントエンド/バックエンド境界をまたぐ場合、設計は他の何よりも先に API コントラクトを確定すること。含めるもの: エンドポイントのパス + HTTPメソッド、リクエスト/レスポンスの形状（フィールド名、型、null許容性。Java の DTO と TypeScript の型の両方をそこから書き起こせる具体度で）、エラーレスポンス。
+- DBスキーマの変更は Flyway マイグレーションの新規追加のみで表現すること。リポジトリが既に使っているマイグレーションディレクトリに `V<次番号>__<説明>.sql` を追加する。適用済みマイグレーションの編集を計画しないこと。
 - ステップは依存関係の順序で並べること: Flyway マイグレーション → バックエンド（entity/repository/service/controller）→ フロントエンド（APIクライアント → Pinia ストア/composable → UIコンポーネント）。各ステップ後もリポジトリがコンパイルできる状態を保つこと。
-- 両サイドともリポジトリ既存のレイヤリング（controller/service/repository、components/composables/stores）に従い、具体的なファイル名を挙げること — 配置を実装者に発明させないこと。
+- 両サイドともリポジトリ既存のレイヤリング（controller/service/repository、components/composables/stores）に従い、具体的なファイル名を挙げること。配置を実装者に発明させないこと。
 
 ## implementation
 
 - フロントエンド: SFC は `<script setup lang="ts">` を使う。共有状態は Pinia ストアに置き、リアクティブなストアの状態を分割代入するときは `storeToRefs` を使う。手書きの CSS より Vuetify のコンポーネントと props を優先する。型エラーを黙らせるための `any` や `as` キャストは持ち込まず、型そのものを直すこと。
 - バックエンド: コンストラクタインジェクション（フィールドへの `@Autowired` は使わない）。トランザクション境界（`@Transactional`）はサービス層に置く。コントローラから JPA エンティティを返さず、リポジトリの DTO パターンに従う。リクエスト入力のバリデーションはリポジトリ既存のやり方（`@Valid` など）に合わせる。
-- DB: スキーマ変更は Flyway マイグレーションの新規追加のみ（`V<次番号>__<説明>.sql`）。適用済みのマイグレーションファイルは決して変更しないこと。
+- DB: スキーマ変更は Flyway マイグレーションの新規追加のみ（`V<次番号>__<説明>.sql`）。適用済みのマイグレーションファイルは変更しないこと。
 - 検証: 通常、フロントエンドの変更では型チェック（`vue-tsc`）+ lint、バックエンドの変更ではコンパイル（`./mvnw compile` または gradle 相当）。
 
 ## testing
 
 - フロントエンド: コンポーネントは Vitest で、リポジトリの規約に従って @vue/test-utils または Testing Library を使う。Pinia ストアはコンポーネントをマウントせず直接テストできる（`setActivePinia(createPinia())`）。
-- バックエンド: JUnit 5。基準を証明できる最小の Spring テストスライスを選ぶこと（コントローラは `@WebMvcTest`、リポジトリは `@DataJpaTest`、基準が本当に層をまたぐ場合のみフルの `@SpringBootTest`）。リポジトリが既に使っていれば PostgreSQL に Testcontainers を使う。
-- Flyway マイグレーションを追加した場合は、クリーンに適用できることを確認すること — 通常はまっさらなデータベースに対するバックエンドのテスト実行で確認できる。マイグレーションの適用失敗はテストの失敗である。
+- バックエンド: JUnit 5。基準を証明できる最小の Spring テストスライスを選ぶこと: コントローラは `@WebMvcTest`、リポジトリは `@DataJpaTest`、基準が本当に層をまたぐ場合のみフルの `@SpringBootTest`。リポジトリが既に使っていれば PostgreSQL に Testcontainers を使う。
+- Flyway マイグレーションを追加した場合は、クリーンに適用できることを確認すること。通常はまっさらなデータベースに対するバックエンドのテスト実行で確認できる。マイグレーションの適用失敗はテストの失敗である。
 
 ## review
 
-- フロントエンド: リアクティビティの喪失（Pinia ストアやリアクティブなオブジェクトを `storeToRefs`/`toRefs` なしで分割代入している）、結果やエラーが意味を持つ Promise への `await` 漏れ、クリーンアップなしで登録された watcher/interval/listener、安定した `:key` のない `v-for`、Pinia ストア外での状態の書き換え、本物の型不一致を覆い隠す `any`/`as` キャスト。
-- バックエンド: N+1 クエリ（ループ内やシリアライズ時の遅延関連の参照）、`@Transactional` の欠落や誤配置（複数の書き込みを伴う操作に付いていない、読み取り専用のはずの経路に付いていて書き込みを隠している）、コントローラから直接返される JPA エンティティ、文字列連結による SQL/JPQL、入力バリデーションのない新規エンドポイント、スタックトレースや内部情報を漏らすエラーレスポンス。
-- DB: 適用済み Flyway マイグレーションへの変更（デプロイ時にチェックサムが壊れる）、マイグレーションの内容とエンティティの変更の不一致。
+- フロントエンド: リアクティビティの喪失（Pinia ストアやリアクティブなオブジェクトを `storeToRefs`/`toRefs` なしで分割代入している）。結果やエラーが意味を持つ Promise への `await` 漏れ。クリーンアップなしで登録された watcher/interval/listener。安定した `:key` のない `v-for`。Pinia ストア外での状態の書き換え。本物の型不一致を覆い隠す `any`/`as` キャスト。
+- バックエンド: N+1 クエリ（ループ内やシリアライズ時の遅延関連の参照）。`@Transactional` の欠落や誤配置（複数の書き込みを伴う操作に付いていない、読み取り専用のはずの経路に付いていて書き込みを隠している）。コントローラから直接返される JPA エンティティ。文字列連結による SQL/JPQL。入力バリデーションのない新規エンドポイント。スタックトレースや内部情報を漏らすエラーレスポンス。
+- DB: 適用済み Flyway マイグレーションへの変更（デプロイ時にチェックサムが壊れる）。マイグレーションの内容とエンティティの変更の不一致。
 - 依存関係: `package.json` が変更されたのに `pnpm-lock.yaml` が変更されていない（あるいはその逆）。
 
 ## publish
 
 - `package.json` を変更した場合、`pnpm-lock.yaml` も一緒にコミットすること（逆も同様）。
-- 変更に Flyway マイグレーションファイルが含まれる場合、PR 本文で明示的に触れること — デプロイ時にデータベーススキーマを変更するものであり、レビュアーが必ず気づく必要がある。
+- 変更に Flyway マイグレーションファイルが含まれる場合、PR 本文で明示的に触れること。デプロイ時にデータベーススキーマを変更するものであり、レビュアーが必ず気づく必要がある。
