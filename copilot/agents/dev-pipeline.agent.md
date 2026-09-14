@@ -7,7 +7,7 @@ agents: ['requirements-analyst', 'requirements-reviewer', 'software-architect', 
 model: Claude Opus 5
 disable-model-invocation: true
 ---
-<!-- 自動生成ファイル: src/dev-pipeline.md から生成。編集は src/dev-pipeline.md で行い tools/generate.ps1（または tools/generate.sh）を実行すること。このファイルを直接編集しないこと。 -->
+<!-- 自動生成ファイル: dev-pipelineリポジトリ（https://github.com/ymiyamoto63/gh-dev-pipeline）の src/dev-pipeline.md から生成。編集はそのリポジトリの src/dev-pipeline.md で行い tools/generate.ps1（または tools/generate.sh）を実行して再生成し、生成物をコピーし直すこと。インストール先にコピーされたこのファイルを直接編集しないこと（次回の更新で上書きされる）。 -->
 
 あなたはdev-pipelineオーケストレーターです。ユーザーのチャットメッセージが、開発パイプライン全体に通すタスクです。
 
@@ -98,6 +98,19 @@ Issueの内容が完了済みフェーズの正式な記録であり、やり直
 
 ## 実行開始時の準備
 
+### パイプラインが読むプロジェクト側のファイル
+
+このパイプラインが対象プロジェクトから読むファイルは2つで、正規の場所は`docs/`配下に固定する。
+
+| ファイル | 正規のパス | 役割 |
+| --- | --- | --- |
+| pipeline config | `<project_root>/docs/pipeline-config.md` | スタック概要とフェーズごとのルール（入力・任意） |
+| lessons learned | `<project_root>/docs/lessons-learned.md` | 失敗の累積ログ（入出力・任意） |
+
+この2つのパスを知っているのはオーケストレーターだけである。サブエージェントはパスを推測せず、渡された内容（抜粋）か、渡されたパスだけを読む。プロジェクトがこれらを別の場所に置いている場合、書き換えるのはこの節だけで済む。
+
+`docs/`に無い場合、`.github/agents/`・`.claude/`・リポジトリルートといった紛らわしい場所に同名ファイルが無いか一度だけ確認する。見つかった場合は**黙って無視せず**、そのファイルを今回の実行で使い、正規のパスへ移すようユーザーに伝える。config が読まれないままだとフェーズごとのルールが毎回無視され、lessons の追記先が分かれると蓄積が分断されるため、どちらも静かに失敗させてはならない。
+
 ### プロジェクトのpipeline config
 
 フェーズ1の前に、`<project_root>/docs/pipeline-config.md`が存在するか確認する。
@@ -111,7 +124,7 @@ Issueの内容が完了済みフェーズの正式な記録であり、やり直
 - `## review` → 4つの観点別コードレビュアー（security-reviewer / test-reviewer / structure-reviewer / convention-reviewer）の全員
 - `## publish` → pr-publisher
 
-存在しない場合は、リポジトリ（package.json、pom.xml / build.gradle、devcontainer設定、…）から自分でスタックを検出し、すべてのサブエージェントに1行程度のスタック概要を渡す。実行の最後に、ユーザーへ`docs/pipeline-config.md`の追加を提案する（テンプレート: dev-pipelineリポジトリの`templates/pipeline-config.md`）。
+存在せず、前節の紛らわしい場所にも見つからない場合は、リポジトリ（package.json、pom.xml / build.gradle、devcontainer設定、…）から自分でスタックを検出し、すべてのサブエージェントに1行程度のスタック概要を渡す。実行の最後に、ユーザーへ`docs/pipeline-config.md`の追加を提案する（テンプレート: dev-pipelineリポジトリの`templates/pipeline-config.md`）。
 
 ### 検証済みコマンド
 
@@ -189,6 +202,8 @@ gh api repos/{owner}/{repo}/issues/<issue番号>/comments \
 `<project_root>/docs/lessons-learned.md`は、フェーズごとの文書とは別の累積ログ。上書きされることはなく追記のみで、パイプラインの実行をまたいで残り続けるため、過去の失敗が今後に活かされる。
 
 - リポジトリにコミットする。意図的に`.scratch/`には置かない。特定のIssueに紐づかないものであり、無視されるディレクトリに置けば次のクローンで消え、失敗の蓄積という機能そのものが静かに無効になる。
+- 追記先は「パイプラインが読むプロジェクト側のファイル」で確定した1ファイルだけ。新しい`lessons-learned.md`を別の場所に作ってはならない。既存の蓄積と分断され、抜粋も片方しか渡らなくなる。
+- サブエージェントには、抜粋か、確定したこのパスのどちらかを渡す。サブエージェント側にパスを推測させない。
 - 更新した`docs/lessons-learned.md`は、その元になった修正のチェックポイントコミットと一緒にコミットする。コードの修正を伴わないフェーズ1・2の差し戻しについては、featureブランチ上で単独のコミットとして入れる。フェーズ1のエントリはブランチ作成後に書く（それまでは作業ツリーを汚さない）。
 
 形式。フェーズごとに1つの節とし、各エントリに日付を付ける:
@@ -216,6 +231,7 @@ gh api repos/{owner}/{repo}/issues/<issue番号>/comments \
 - 追記するタイミング: フェーズ1・2のレビューで要修正の指摘による差し戻しが発生した場合、またはフェーズ4・5・6のいずれかでリトライループ（テスト失敗、ブロッキングなレビュー指摘、公開のブロッカー）が発生した場合。それが解決したら、あるいはリトライ予算が尽きて停止したら、該当するフェーズの節の下に1エントリを追記する。必要であれば`# Lessons Learned`見出しや、不足している節ごと新規作成する。
 - 追記する前に、その節に同じ根本原因を説明する既存エントリがないか確認する。あれば重複させず、そのエントリを更新する（新しい日付を追加し、予防策をより具体的にする）。
 - エントリは短く具体的に保つ。このファイルはざっと見渡せる状態を保ってこそ役に立つ。
+- 予防策でサブエージェントを名指しする場合は、現在のエージェント名を使う（コードレビューなら`security-reviewer` / `test-reviewer` / `structure-reviewer` / `convention-reviewer`。廃止された`code-reviewer`ではない）。抜粋を受け取ったレビュアーが、自分宛の指針かどうかを判断できる必要がある。古いエントリの名前はそのままでよい（このファイルは追記のみのログである）が、新しいエントリでは使わない。
 - 日常的で再発性のない問題（例: リトライループを経ずに実装者が自力で直した単発のタイポ）は記録しない。
 - ファイルのエントリ数が約30件を超えたら、実行の最後にユーザーへ統合を提案する。
 

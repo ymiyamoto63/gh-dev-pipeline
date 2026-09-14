@@ -90,7 +90,7 @@ build_output() { # $1=src-name $2=format ; result in $built
       '<<<copilot>>>') cur=copilot; continue ;;
       '<<<body>>>')
         cur=body
-        built+="<!-- 自動生成ファイル: src/$name.md から生成。編集は src/$name.md で行い tools/generate.ps1（または tools/generate.sh）を実行すること。このファイルを直接編集しないこと。 -->"$'\n'
+        built+="<!-- 自動生成ファイル: dev-pipelineリポジトリ（https://github.com/ymiyamoto63/gh-dev-pipeline）の src/$name.md から生成。編集はそのリポジトリの src/$name.md で行い tools/generate.ps1（または tools/generate.sh）を実行して再生成し、生成物をコピーし直すこと。インストール先にコピーされたこのファイルを直接編集しないこと（次回の更新で上書きされる）。 -->"$'\n'
         continue ;;
     esac
     if [[ $cur == "$fmt" ]]; then

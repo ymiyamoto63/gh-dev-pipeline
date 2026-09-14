@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # gh CLI extension entry point for dev-pipeline (GitHub Copilot version).
 # Usage: gh dev-pipeline [target-dir]   (default target-dir: .)
+#
+# Installing is a sync, not just a copy: definitions dropped upstream are also
+# removed from the target. Without that, an agent that was deleted here (e.g.
+# code-reviewer, replaced by the four per-aspect reviewers) keeps living in the
+# target repo, where its stale description still advertises a phase that no
+# longer exists and it can be picked from the agent list by mistake.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -12,7 +18,38 @@ if [ ! -d "$TARGET_DIR/.git" ]; then
 fi
 
 mkdir -p "$TARGET_DIR/.github/agents" "$TARGET_DIR/.github/prompts"
+
+# Remove files this version no longer ships, before copying the current set.
+prune_stale() { # $1=source dir  $2=target dir  $3=filename glob
+  local src_dir=$1 dst_dir=$2 pattern=$3 dst base
+  for dst in "$dst_dir"/$pattern; do
+    [ -e "$dst" ] || continue
+    base=$(basename "$dst")
+    if [ ! -e "$src_dir/$base" ]; then
+      rm -- "$dst"
+      echo "removed stale: $dst_dir/$base"
+    fi
+  done
+}
+
+prune_stale "$SCRIPT_DIR/copilot/agents"  "$TARGET_DIR/.github/agents"  '*.agent.md'
+prune_stale "$SCRIPT_DIR/copilot/prompts" "$TARGET_DIR/.github/prompts" '*.prompt.md'
+
 cp "$SCRIPT_DIR/copilot/agents/"*.agent.md "$TARGET_DIR/.github/agents/"
 cp "$SCRIPT_DIR/copilot/prompts/"*.prompt.md "$TARGET_DIR/.github/prompts/"
 
 echo "Installed dev-pipeline (Copilot) into $TARGET_DIR/.github/agents and $TARGET_DIR/.github/prompts"
+
+# The pipeline reads two project-side files, and it reads them from docs/ only.
+# Say so here: dropping them next to the agent definitions in .github/agents/ is
+# an easy mistake, and there the config is ignored and the lessons log splits
+# away from the accumulated one.
+if [ ! -f "$TARGET_DIR/docs/pipeline-config.md" ]; then
+  echo ""
+  echo "note: no $TARGET_DIR/docs/pipeline-config.md found (optional but recommended)."
+  echo "      The pipeline reads the stack config from docs/pipeline-config.md and appends"
+  echo "      lessons learned to docs/lessons-learned.md — not .github/agents/."
+  echo "      Start from the template and edit it for this project's stack:"
+  echo "        mkdir -p $TARGET_DIR/docs"
+  echo "        cp $SCRIPT_DIR/templates/pipeline-config.md $TARGET_DIR/docs/pipeline-config.md"
+fi
