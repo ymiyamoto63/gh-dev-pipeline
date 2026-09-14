@@ -112,7 +112,9 @@ dev-pipeline/
 
 リトライループが発生した場合、原因と予防策が `docs/lessons-learned.md` にフェーズ別セクションで蓄積される。以降の実行では、各フェーズのサブエージェントに**該当セクションの抜粋だけ**が渡される。同一根本原因のエントリは重複追加せず既存エントリを更新し、約30件を超えたら統合を提案する。
 
-このファイルは `.scratch/` ではなく `docs/` に置き、**リポジトリにコミットする**。特定の Issue に紐づかない横断的なログであり、git 管理外のディレクトリに置くとクローンやマシンを変えた時点で失われ、「失敗の蓄積」という機能自体が静かに無効になるため。
+このファイルは `.scratch/` ではなく `docs/` に置き、**リポジトリにコミットする**。特定の Issue に紐づかない横断的なログであり、git 管理外のディレクトリに置くとクローンやマシンを変えた時点で失われ、「失敗の蓄積」という機能自体が静かに無効になるため。置き場所の詳細は「[置き場所は `docs/` に固定](#置き場所は-docs-に固定)」を参照。
+
+予防策でサブエージェントを名指しするときは現在のエージェント名を使う（コードレビューなら4観点のレビュアー名。廃止された `code-reviewer` ではない）。抜粋を受け取ったレビュアーが、自分宛の指針かどうかを判断できる必要がある。追記のみのログなので既存エントリの名前は直さない。
 
 ## インストール（Claude Code 版）
 
@@ -139,6 +141,7 @@ cp -r skills/dev-pipeline ~/.claude/skills/
 - 特定のプロジェクトだけで使う場合は、そのリポジトリの `.claude/agents/` と `.claude/skills/` に同じものを置いてコミットする。同名の定義はプロジェクト側がユーザー側より優先される。
 - 配置後は **Claude Code の再起動が必要**。サブエージェント/スキルディレクトリの監視は、セッション開始時に存在していたディレクトリだけが対象のため。
 - 以前 `~/.claude/commands/dev-pipeline.md` を置いていた場合は削除する。同名のスキルとコマンドが両方あるとスキル側が使われるが、二重に残す理由はない。
+- 更新時、`cp` は上書きしかしないため、**廃止された定義は自分で削除する**。`~/.claude/agents/` に `agents/` 側に無い `.md` が残っていないか確認すること（例: 4観点のレビュアーに置き換わった旧 `code-reviewer.md`）。残っていると陳腐化した description のままエージェント一覧に並び続ける。
 
 ## 対象プロジェクト側の設定（pipeline-config.md・推奨）
 
@@ -156,6 +159,15 @@ Copy-Item templates\pipeline-config.md <target-project>\docs\pipeline-config.md
 ```
 
 テンプレートは Vue 3 + TypeScript + Pinia + Vuetify + Vite + pnpm / Spring Boot + Flyway + PostgreSQL スタックの例になっているので、プロジェクトに合わせて編集する。ファイルがない場合、オーケストレーターはリポジトリからスタックを自動検出し、簡易なスタック概要を各エージェントに渡す（精度は config がある方が高い）。いずれの場合も実リポジトリの規約が常に優先される。
+
+### 置き場所は `docs/` に固定
+
+パイプラインが対象プロジェクトから読むファイルは、`docs/pipeline-config.md` と `docs/lessons-learned.md` の2つだけ。どちらも **`docs/` 直下**に置く。
+
+- Copilot 版はエージェント定義を `.github/agents/` に置くため、この2ファイルもそこへ置いてしまいやすい。`.github/agents/` はエージェント定義のディレクトリであり、そこに置いた config は読まれず、フェーズごとのルールが毎回無視される。lessons も追記先が分かれて既存の蓄積と分断される。
+- Claude Code 版には `.github/agents/` が存在しない。`docs/` は2形式で共通に使える唯一の場所である。
+- このパスを知っているのはオーケストレーター（`src/dev-pipeline.md` の「パイプラインが読むプロジェクト側のファイル」）だけ。11 のサブエージェントはパスを持たず、渡された抜粋かパスだけを読む。プロジェクトの都合で置き場所を変える場合、書き換えるのはオーケストレーターの1箇所で済む。
+- `docs/` に無い場合、オーケストレーターは `.github/agents/` などの紛らわしい場所も確認する。見つかったら黙って無視せず、その実行では使ったうえで `docs/` へ移すよう促す。
 
 ## 使い方（Claude Code 版）
 
@@ -196,6 +208,10 @@ gh dev-pipeline [target-dir]
 
 `copilot/agents/*.agent.md` と `copilot/prompts/*.prompt.md` が `<target-dir>/.github/agents/` と `<target-dir>/.github/prompts/` にコピーされる。更新時は `gh extension upgrade dev-pipeline && gh dev-pipeline` を再度実行する。
 
+インストールは単純なコピーではなく**同期**である。このリポジトリから削除された定義は、対象リポジトリからも削除される（`*.agent.md` / `*.prompt.md` のうち、現在配布していないファイルだけ。手で置いた他のファイルは触らない）。旧 `code-reviewer.agent.md` のように廃止された定義が対象側に残ると、陳腐化した description が存在しないフェーズを宣伝し続け、エージェント一覧から誤って選ばれる余地も残るため。
+
+`docs/pipeline-config.md` が無い場合は、テンプレートのコピー手順を案内するメッセージが出る。config 自体は自動生成しない（テンプレートは Vue 3 + Spring Boot スタックの例であり、別スタックのプロジェクトにそのまま置くと誤った前提が各フェーズに配られる）。
+
 #### 手動コピー
 
 ```powershell
@@ -211,6 +227,8 @@ mkdir -p <target-project>/.github/{agents,prompts}
 cp copilot/agents/*.agent.md <target-project>/.github/agents/
 cp copilot/prompts/*.prompt.md <target-project>/.github/prompts/
 ```
+
+手動コピーは上書きしかしないため、**廃止された定義は自分で削除する**。コピー後に対象側の `.github/agents/` を `copilot/agents/` と見比べ、こちらに無い `*.agent.md` を消すこと（`gh dev-pipeline` はこれを自動で行う）。Claude Code 版の `~/.claude/agents/` も同様。
 
 全プロジェクト共通で使いたい場合は、VS Code のコマンドパレットから「Chat: New Custom Agent File」→ User を選んでユーザープロファイルに置く。Copilot CLI なら `~/.copilot/agents/`。
 
@@ -265,6 +283,8 @@ Copilot 版は複数ベンダーのモデルを選べるため、作成フェー
 ## 2形式の生成（単一ソース）
 
 Claude 版（`agents/` + `skills/dev-pipeline/SKILL.md`）と Copilot 版（`copilot/agents/`）は `src/` の単一ソースから生成される。**編集するのは常に `src/` のみ。**生成物の先頭には自動生成である旨の注記が入っており、直接編集してはいけない（CI が検出して失敗する）。
+
+注記はこのリポジトリの URL を含む。生成物は対象プロジェクトの `.github/agents/` や `~/.claude/agents/` にコピーされて使われ、そこには `src/` も `tools/generate.*` も無いため、「どこを編集すべきか」がコピー先だけを見ても分かるようにしてある。
 
 `src/<name>.md` は3つのセクションからなる。
 

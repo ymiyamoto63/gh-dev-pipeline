@@ -90,7 +90,7 @@ function Build-Output($sections, [string]$fmt, [string]$name) {
     if ($fmt -eq 'claude') { $other = 'copilot' } else { $other = 'claude' }
     $lines = New-Object System.Collections.Generic.List[string]
     foreach ($l in $sections[$fmt]) { $lines.Add($l) }
-    $lines.Add("<!-- 自動生成ファイル: src/$name.md から生成。編集は src/$name.md で行い tools/generate.ps1（または tools/generate.sh）を実行すること。このファイルを直接編集しないこと。 -->")
+    $lines.Add("<!-- 自動生成ファイル: dev-pipelineリポジトリ（https://github.com/ymiyamoto63/gh-dev-pipeline）の src/$name.md から生成。編集はそのリポジトリの src/$name.md で行い tools/generate.ps1（または tools/generate.sh）を実行して再生成し、生成物をコピーし直すこと。インストール先にコピーされたこのファイルを直接編集しないこと（次回の更新で上書きされる）。 -->")
     foreach ($l in (Render-Body $sections['body'] $fmt $other $name)) { $lines.Add($l) }
     return (($lines -join "`n") + "`n")
 }
