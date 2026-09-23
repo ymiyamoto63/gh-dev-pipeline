@@ -10,7 +10,7 @@ model: haiku
 name: pr-publisher
 description: レビュー済みで動作する変更をコミットし、明確なタイトルと説明を付けてプルリクエストを開く。dev-pipelineの最終フェーズで、観点別コードレビュアーが要修正の問題を残しておらず、ユーザーが公開を希望することを確認した後にのみオーケストレーターが呼び出す。main/masterへの直接pushやforce-pushには使わないこと。
 tools: ['read', 'edit', 'search', 'execute']
-model: Claude Haiku 4.5
+model: GPT-6 Luna
 disable-model-invocation: true
 ---
 <<<body>>>

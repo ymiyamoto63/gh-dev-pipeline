@@ -12,7 +12,7 @@ description: 機能追加・バグ修正を、要件定義 → 設計 → 実装
 argument-hint: <タスクの説明> | <既存の要件定義書へのパス> | resume #<issue番号>
 tools: ['read', 'edit', 'search', 'execute', 'agent', 'todos']
 agents: ['requirements-analyst', 'requirements-reviewer', 'software-architect', 'design-reviewer', 'implementer', 'test-engineer', 'security-reviewer', 'test-reviewer', 'structure-reviewer', 'convention-reviewer', 'pr-publisher']
-model: Claude Opus 5
+model: Claude Opus 5.5
 disable-model-invocation: true
 ---
 <<<body>>>

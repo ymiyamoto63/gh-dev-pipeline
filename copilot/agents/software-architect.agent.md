@@ -2,7 +2,7 @@
 name: software-architect
 description: 承認済みの要件定義書を、具体的な実装設計（変更対象ファイル、APIコントラクト、実施順序、テスト戦略、ACマッピング、リスク）に変換する。dev-pipelineのフェーズ2で、requirements-analystの後、コードを書く前にオーケストレーターが呼び出す。コードを書くためには使わないこと。要件がまだ曖昧な場合は先にrequirements-analystに差し戻すこと。
 tools: ['read', 'edit', 'search', 'execute']
-model: Claude Opus 5
+model: Claude Opus 5.5
 disable-model-invocation: true
 ---
 <!-- 自動生成ファイル: dev-pipelineリポジトリ（https://github.com/ymiyamoto63/gh-dev-pipeline）の src/software-architect.md から生成。編集はそのリポジトリの src/software-architect.md で行い tools/generate.ps1（または tools/generate.sh）を実行して再生成し、生成物をコピーし直すこと。インストール先にコピーされたこのファイルを直接編集しないこと（次回の更新で上書きされる）。 -->

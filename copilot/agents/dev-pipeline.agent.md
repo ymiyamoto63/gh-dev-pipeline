@@ -4,7 +4,7 @@ description: 機能追加・バグ修正を、要件定義 → 設計 → 実装
 argument-hint: <タスクの説明> | <既存の要件定義書へのパス> | resume #<issue番号>
 tools: ['read', 'edit', 'search', 'execute', 'agent', 'todos']
 agents: ['requirements-analyst', 'requirements-reviewer', 'software-architect', 'design-reviewer', 'implementer', 'test-engineer', 'security-reviewer', 'test-reviewer', 'structure-reviewer', 'convention-reviewer', 'pr-publisher']
-model: Claude Opus 5
+model: Claude Opus 5.5
 disable-model-invocation: true
 ---
 <!-- 自動生成ファイル: dev-pipelineリポジトリ（https://github.com/ymiyamoto63/gh-dev-pipeline）の src/dev-pipeline.md から生成。編集はそのリポジトリの src/dev-pipeline.md で行い tools/generate.ps1（または tools/generate.sh）を実行して再生成し、生成物をコピーし直すこと。インストール先にコピーされたこのファイルを直接編集しないこと（次回の更新で上書きされる）。 -->
