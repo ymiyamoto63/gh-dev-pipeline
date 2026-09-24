@@ -50,16 +50,25 @@ cp "$SCRIPT_DIR/copilot/prompts/"*.prompt.md "$TARGET_DIR/.github/prompts/"
 
 echo "Installed dev-pipeline (Copilot) into $TARGET_DIR/.github/agents and $TARGET_DIR/.github/prompts"
 
-# The pipeline reads two project-side files, and it reads them from docs/ only.
-# Say so here: dropping them next to the agent definitions in .github/agents/ is
-# an easy mistake, and there the config is ignored and the lessons log splits
-# away from the accumulated one.
-if [ ! -f "$TARGET_DIR/docs/pipeline-config.md" ]; then
+# The pipeline reads two project-side files, pipeline-config.md and
+# lessons-learned.md. For this install they live next to the agent definitions
+# in .github/agents/ (the Claude Code version uses .claude/, an install under
+# .agents/ uses .agents/). The old location was docs/; point out files left
+# there so the config is not silently ignored and the lessons log does not split.
+CONFIG_DIR="$TARGET_DIR/.github/agents"
+for f in pipeline-config.md lessons-learned.md; do
+  if [ -f "$TARGET_DIR/docs/$f" ] && [ ! -f "$CONFIG_DIR/$f" ]; then
+    echo ""
+    echo "note: found $TARGET_DIR/docs/$f — the pipeline now reads it from $CONFIG_DIR/."
+    echo "      Move it there (from $TARGET_DIR):"
+    echo "        git mv docs/$f .github/agents/$f"
+  fi
+done
+if [ ! -f "$CONFIG_DIR/pipeline-config.md" ] && [ ! -f "$TARGET_DIR/docs/pipeline-config.md" ]; then
   echo ""
-  echo "note: no $TARGET_DIR/docs/pipeline-config.md found (optional but recommended)."
-  echo "      The pipeline reads the stack config from docs/pipeline-config.md and appends"
-  echo "      lessons learned to docs/lessons-learned.md — not .github/agents/."
+  echo "note: no $CONFIG_DIR/pipeline-config.md found (optional but recommended)."
+  echo "      The pipeline reads the stack config from .github/agents/pipeline-config.md and"
+  echo "      appends lessons learned to .github/agents/lessons-learned.md."
   echo "      Start from the template and edit it for this project's stack:"
-  echo "        mkdir -p $TARGET_DIR/docs"
-  echo "        cp $SCRIPT_DIR/templates/pipeline-config.md $TARGET_DIR/docs/pipeline-config.md"
+  echo "        cp $SCRIPT_DIR/templates/pipeline-config.md $CONFIG_DIR/pipeline-config.md"
 fi

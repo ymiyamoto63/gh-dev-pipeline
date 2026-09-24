@@ -1,6 +1,6 @@
 # Pipeline Config
 
-このファイルは対象プロジェクトの `docs/pipeline-config.md` にコピーして使う。dev-pipeline のオーケストレーターが実行開始時にこれを読み、各節を対応するフェーズのサブエージェントにそのまま渡す。
+このファイルは対象プロジェクトの設定ディレクトリにコピーして使う（Copilot 版は `.github/agents/pipeline-config.md`、Claude Code 版は `.claude/pipeline-config.md`、`.agents/` 配下にインストールした場合は `.agents/pipeline-config.md`）。dev-pipeline のオーケストレーターが実行開始時にこれを読み、各節を対応するフェーズのサブエージェントにそのまま渡す。
 
 | 節 | 渡される先 |
 | --- | --- |
