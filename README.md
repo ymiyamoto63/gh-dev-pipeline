@@ -208,7 +208,9 @@ gh dev-pipeline [target-dir]
 
 `copilot/agents/*.agent.md` と `copilot/prompts/*.prompt.md` が `<target-dir>/.github/agents/` と `<target-dir>/.github/prompts/` にコピーされる。更新時は `gh extension upgrade dev-pipeline && gh dev-pipeline` を再度実行する。
 
-エージェント定義については、インストールは単純なコピーではなく**同期**である。このリポジトリから削除されたエージェント定義は、対象リポジトリからも削除される（`.github/agents/` の `*.agent.md` のうち、現在配布していないファイルだけ）。`.github/prompts/` はコピーするだけで削除は行わない。プロジェクト独自のプロンプトファイルが置かれることが多く、それを消すのはインストーラーの役割ではないため。旧 `code-reviewer.agent.md` のように廃止された定義が対象側に残ると、陳腐化した description が存在しないフェーズを宣伝し続け、エージェント一覧から誤って選ばれる余地も残るため。
+インストールは配布中の定義をコピーするだけで、`.github/agents/` と `.github/prompts/` にあるプロジェクト独自のエージェントやプロンプトは削除しない。dev-pipeline が配布していないというだけでは、不要なファイルとはいえないため。
+
+例外は、このリポジトリがかつて配布し、その後廃止したエージェント定義（旧 `code-reviewer.agent.md` など）だけである。これが対象側に残ると、陳腐化した description が存在しないフェーズを宣伝し続け、エージェント一覧から誤って選ばれる余地も残る。そこで、`gh-dev-pipeline` の `RETIRED_AGENTS` に名前が載っていて、かつ自動生成ファイルのマーカーを含むファイルだけを削除する。同名でもマーカーのないファイルは残し、その旨を表示する。エージェントを廃止するときは `RETIRED_AGENTS` に名前を追加すること。
 
 `docs/pipeline-config.md` が無い場合は、テンプレートのコピー手順を案内するメッセージが出る。config 自体は自動生成しない（テンプレートは Vue 3 + Spring Boot スタックの例であり、別スタックのプロジェクトにそのまま置くと誤った前提が各フェーズに配られる）。
 
@@ -228,7 +230,7 @@ cp copilot/agents/*.agent.md <target-project>/.github/agents/
 cp copilot/prompts/*.prompt.md <target-project>/.github/prompts/
 ```
 
-手動コピーは上書きしかしないため、**廃止された定義は自分で削除する**。コピー後に対象側の `.github/agents/` を `copilot/agents/` と見比べ、こちらに無い `*.agent.md` を消すこと（`gh dev-pipeline` はこれを自動で行う）。Claude Code 版の `~/.claude/agents/` も同様。
+手動コピーは上書きしかしないため、**廃止された定義は自分で削除する**。コピー後に対象側の `.github/agents/` に、廃止済みの定義（`gh-dev-pipeline` の `RETIRED_AGENTS` に載っている名前）が残っていないか確認し、あれば消すこと（`gh dev-pipeline` はこれを自動で行う）。Claude Code 版の `~/.claude/agents/` も同様。
 
 全プロジェクト共通で使いたい場合は、VS Code のコマンドパレットから「Chat: New Custom Agent File」→ User を選んでユーザープロファイルに置く。Copilot CLI なら `~/.copilot/agents/`。
 
