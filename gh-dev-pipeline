@@ -2,11 +2,17 @@
 # gh CLI extension entry point for dev-pipeline (GitHub Copilot version).
 # Usage: gh dev-pipeline [target-dir]   (default target-dir: .)
 #
-# Installing is a sync, not just a copy: definitions dropped upstream are also
-# removed from the target. Without that, an agent that was deleted here (e.g.
-# code-reviewer, replaced by the four per-aspect reviewers) keeps living in the
-# target repo, where its stale description still advertises a phase that no
-# longer exists and it can be picked from the agent list by mistake.
+# Installing copies the current definitions and never deletes files the
+# installer does not own. .github/agents/ and .github/prompts/ commonly hold the
+# project's own agents and prompts, and "not shipped by dev-pipeline" does not
+# mean "stale".
+#
+# The one exception is an agent this repo used to ship and has since retired
+# (e.g. code-reviewer, replaced by the four per-aspect reviewers). Left behind,
+# its stale description still advertises a phase that no longer exists and it
+# can be picked from the agent list by mistake. Such files are removed only when
+# the name is in RETIRED_AGENTS and the file still carries the generated-file
+# marker, so a project's own file that happens to share the name is kept.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -19,21 +25,25 @@ fi
 
 mkdir -p "$TARGET_DIR/.github/agents" "$TARGET_DIR/.github/prompts"
 
-# Remove files this version no longer ships, before copying the current set.
-prune_stale() { # $1=source dir  $2=target dir  $3=filename glob
-  local src_dir=$1 dst_dir=$2 pattern=$3 dst base
-  for dst in "$dst_dir"/$pattern; do
-    [ -e "$dst" ] || continue
-    base=$(basename "$dst")
-    if [ ! -e "$src_dir/$base" ]; then
-      rm -- "$dst"
-      echo "removed stale: $dst_dir/$base"
-    fi
-  done
-}
+# Agent files this repo used to ship and no longer does. Add a name here when
+# retiring an agent; never list a name that is still shipped.
+RETIRED_AGENTS=(
+  code-reviewer.agent.md
+)
+GENERATED_MARKER='<!-- 自動生成ファイル:'
 
-prune_stale "$SCRIPT_DIR/copilot/agents"  "$TARGET_DIR/.github/agents"  '*.agent.md'
-prune_stale "$SCRIPT_DIR/copilot/prompts" "$TARGET_DIR/.github/prompts" '*.prompt.md'
+for base in "${RETIRED_AGENTS[@]}"; do
+  dst="$TARGET_DIR/.github/agents/$base"
+  [ -e "$dst" ] || continue
+  if grep -qF -- "$GENERATED_MARKER" "$dst"; then
+    rm -- "$dst"
+    echo "removed retired: $dst"
+  else
+    echo "note: kept $dst — dev-pipeline no longer ships an agent by this name, but this file" >&2
+    echo "      has no dev-pipeline generated-file marker, so it was left alone. Delete it" >&2
+    echo "      yourself if it is a leftover from an old dev-pipeline install." >&2
+  fi
+done
 
 cp "$SCRIPT_DIR/copilot/agents/"*.agent.md "$TARGET_DIR/.github/agents/"
 cp "$SCRIPT_DIR/copilot/prompts/"*.prompt.md "$TARGET_DIR/.github/prompts/"
