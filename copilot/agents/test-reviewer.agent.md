@@ -2,7 +2,7 @@
 name: test-reviewer
 description: コード変更（diff）をテストの観点 — 変更した各振る舞いに対応するテストの有無、何も検証していない骨抜きテストの検出、既存テストの不当な弱体化、受け入れ基準と実テストコードの突き合わせ — に絞ってレビューする。dev-pipelineのフェーズ5で、test-engineerの後に、他の3つの観点別レビュアー（security-reviewer / structure-reviewer / convention-reviewer）と並行してオーケストレーターが呼び出す。テストの作成や修正には使わない — 発見事項を呼び出し元に報告するだけ。
 tools: ['read', 'edit', 'search', 'execute']
-model: GPT-5.6 Terra
+model: GPT-6 Sol
 disable-model-invocation: true
 ---
 <!-- 自動生成ファイル: dev-pipelineリポジトリ（https://github.com/ymiyamoto63/gh-dev-pipeline）の src/test-reviewer.md から生成。編集はそのリポジトリの src/test-reviewer.md で行い tools/generate.ps1（または tools/generate.sh）を実行して再生成し、生成物をコピーし直すこと。インストール先にコピーされたこのファイルを直接編集しないこと（次回の更新で上書きされる）。 -->

@@ -258,20 +258,20 @@ Copilot 版は複数ベンダーのモデルを選べるため、作成フェー
 
 | フェーズ | Claude Code 版 | Copilot 版 |
 | --- | --- | --- |
-| `dev-pipeline`（オーケストレーター） | 親セッションのモデル | Claude Opus 5 |
-| `requirements-analyst` | `opus` | Claude Opus 5 |
-| `requirements-reviewer` | `opus` | GPT-5.6 Terra |
-| `software-architect` | `opus` | Claude Opus 5 |
-| `design-reviewer` | `opus` | GPT-5.6 Terra |
+| `dev-pipeline`（オーケストレーター） | 親セッションのモデル | Claude Opus 5.5 |
+| `requirements-analyst` | `opus` | Claude Opus 5.5 |
+| `requirements-reviewer` | `opus` | GPT-6 Sol |
+| `software-architect` | `opus` | Claude Opus 5.5 |
+| `design-reviewer` | `opus` | GPT-6 Sol |
 | `implementer` | `sonnet` | Claude Sonnet 5 |
 | `test-engineer` | `sonnet` | Claude Sonnet 5 |
-| `security-reviewer` / `test-reviewer` / `structure-reviewer` / `convention-reviewer` | `sonnet` | GPT-5.6 Terra |
-| `pr-publisher` | `haiku` | Claude Haiku 4.5 |
+| `security-reviewer` / `test-reviewer` / `structure-reviewer` / `convention-reviewer` | `sonnet` | GPT-6 Sol |
+| `pr-publisher` | `haiku` | GPT-6 Luna |
 
 モデルを変更するときは、`src/<agent>.md` の該当 frontmatter（claude 側 / copilot 側）の `model` を編集して再生成する。
 
 - Copilot 版の値は**モデルピッカーの表示名をそのまま書く**（`opus` のような抽象エイリアスは使えない）。組織のモデルポリシーで無効なモデルを指定するとエージェントの読み込み自体が失敗するので、モデル追加・廃止のたびに Copilot CLI の `/model` で実在する表示名を確認する。VS Code の Copilot Chat はフォールバック指定として配列（`model: [A, B]`）も受け付けるが、Copilot CLI は文字列しか受け付けない（`Expected string, received array` で落ちる）。**スカラー文字列で書く。**
-- Claude Code 版のエイリアスは現在 `opus` → Opus 5、`sonnet` → Sonnet 5、`haiku` → Haiku 4.5 に解決される。親セッションのモデルを継承させたい場合は `model` 行を削除する（または `inherit`）。`fable`（Fable 5.1）と `best`（利用可能なら Fable、なければ Opus）も指定できる。要件・設計フェーズをさらに強いモデルで回したい場合は上流4エージェントの `model` を `best` に変える。コストは上がるので、自分のタスクで効果を確認してから採用すること。
+- Claude Code 版のエイリアスは現在 `opus` → Opus 5.5（Claude Code v2.1.280 以降が必要）、`sonnet` → Sonnet 5、`haiku` → Haiku 4.5 に解決される。親セッションのモデルを継承させたい場合は `model` 行を削除する（または `inherit`）。`fable`（Fable 5.1）と `best`（利用可能なら Fable、なければ Opus 5.5）も指定できる。要件・設計フェーズをさらに強いモデルで回したい場合は上流4エージェントの `model` を `best` に変える。コストは上がるので、自分のタスクで効果を確認してから採用すること。
 
 **その他の相違点。**
 

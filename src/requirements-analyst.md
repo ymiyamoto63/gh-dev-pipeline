@@ -10,7 +10,7 @@ model: opus
 name: requirements-analyst
 description: 生の機能要望やバグ報告を、スコープ・影響範囲・非目的・受け入れ基準・未決定事項を備えた要件定義書に変換する。dev-pipelineのフェーズ1（設計や実装が始まる前）でオーケストレーターが呼び出す。純粋な調査・探索タスクや、既に十分に仕様化されているタスクには使わないこと。
 tools: ['read', 'edit', 'search', 'execute', 'web']
-model: Claude Opus 5
+model: Claude Opus 5.5
 disable-model-invocation: true
 ---
 <<<body>>>

@@ -2,7 +2,7 @@
 name: design-reviewer
 description: 設計書を、要件定義書の全受け入れ基準のカバー、APIコントラクトとDBスキーマ・データモデルの具体性、影響を受けるファイルとリポジトリの実態との一致、既存の抽象化・レイヤリングへの適合、実装ステップの順序と粒度、見落とされたリスク、スコープの逸脱の観点でレビューする。dev-pipelineのフェーズ2で、software-architectが設計書を書いた後、実装が始まる前にオーケストレーターが呼び出す。設計書の修正には使わない — 発見事項を呼び出し元に報告するだけ。
 tools: ['read', 'edit', 'search', 'execute']
-model: GPT-5.6 Terra
+model: GPT-6 Sol
 disable-model-invocation: true
 ---
 <!-- 自動生成ファイル: dev-pipelineリポジトリ（https://github.com/ymiyamoto63/gh-dev-pipeline）の src/design-reviewer.md から生成。編集はそのリポジトリの src/design-reviewer.md で行い tools/generate.ps1（または tools/generate.sh）を実行して再生成し、生成物をコピーし直すこと。インストール先にコピーされたこのファイルを直接編集しないこと（次回の更新で上書きされる）。 -->
