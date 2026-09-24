@@ -50,16 +50,32 @@ cp "$SCRIPT_DIR/copilot/prompts/"*.prompt.md "$TARGET_DIR/.github/prompts/"
 
 echo "Installed dev-pipeline (Copilot) into $TARGET_DIR/.github/agents and $TARGET_DIR/.github/prompts"
 
-# The pipeline reads two project-side files, and it reads them from docs/ only.
-# Say so here: dropping them next to the agent definitions in .github/agents/ is
-# an easy mistake, and there the config is ignored and the lessons log splits
-# away from the accumulated one.
-if [ ! -f "$TARGET_DIR/docs/pipeline-config.md" ]; then
+# The pipeline reads two project-side files, pipeline-config.md and
+# lessons-learned.md. For this install they live in .github/dev-pipeline/ (the
+# Claude Code version uses .claude/, an install under .agents/ uses .agents/).
+# Not in .github/agents/: VS Code loads every .md there as a custom agent, so
+# the two files would show up in the agent picker. Earlier locations were docs/
+# and .github/agents/; point out files left there so the config is not silently
+# ignored and the lessons log does not split.
+CONFIG_DIR="$TARGET_DIR/.github/dev-pipeline"
+for f in pipeline-config.md lessons-learned.md; do
+  for old in docs .github/agents; do
+    if [ -f "$TARGET_DIR/$old/$f" ] && [ ! -f "$CONFIG_DIR/$f" ]; then
+      echo ""
+      echo "note: found $TARGET_DIR/$old/$f — the pipeline now reads it from $CONFIG_DIR/."
+      echo "      Move it there (from $TARGET_DIR):"
+      echo "        mkdir -p .github/dev-pipeline && git mv $old/$f .github/dev-pipeline/$f"
+    fi
+  done
+done
+if [ ! -f "$CONFIG_DIR/pipeline-config.md" ] \
+  && [ ! -f "$TARGET_DIR/docs/pipeline-config.md" ] \
+  && [ ! -f "$TARGET_DIR/.github/agents/pipeline-config.md" ]; then
   echo ""
-  echo "note: no $TARGET_DIR/docs/pipeline-config.md found (optional but recommended)."
-  echo "      The pipeline reads the stack config from docs/pipeline-config.md and appends"
-  echo "      lessons learned to docs/lessons-learned.md — not .github/agents/."
+  echo "note: no $CONFIG_DIR/pipeline-config.md found (optional but recommended)."
+  echo "      The pipeline reads the stack config from .github/dev-pipeline/pipeline-config.md"
+  echo "      and appends lessons learned to .github/dev-pipeline/lessons-learned.md."
   echo "      Start from the template and edit it for this project's stack:"
-  echo "        mkdir -p $TARGET_DIR/docs"
-  echo "        cp $SCRIPT_DIR/templates/pipeline-config.md $TARGET_DIR/docs/pipeline-config.md"
+  echo "        mkdir -p $CONFIG_DIR"
+  echo "        cp $SCRIPT_DIR/templates/pipeline-config.md $CONFIG_DIR/pipeline-config.md"
 fi

@@ -111,20 +111,36 @@ Issueの内容が完了済みフェーズの正式な記録であり、やり直
 
 ### パイプラインが読むプロジェクト側のファイル
 
-このパイプラインが対象プロジェクトから読むファイルは2つで、正規の場所は`docs/`配下に固定する。
+このパイプラインが対象プロジェクトから読むファイルは2つで、どちらも同じ**設定ディレクトリ**（以下`<config_dir>`）に置く。`<config_dir>`はdev-pipelineのインストールの仕方で決まる。
 
 | ファイル | 正規のパス | 役割 |
 | --- | --- | --- |
-| pipeline config | `<project_root>/docs/pipeline-config.md` | スタック概要とフェーズごとのルール（入力・任意） |
-| lessons learned | `<project_root>/docs/lessons-learned.md` | 失敗の累積ログ（入出力・任意） |
+| pipeline config | `<config_dir>/pipeline-config.md` | スタック概要とフェーズごとのルール（入力・任意） |
+| lessons learned | `<config_dir>/lessons-learned.md` | 失敗の累積ログ（入出力・任意） |
+
+| インストールの仕方 | `<config_dir>` |
+| --- | --- |
+| GitHub Copilot版を対象プロジェクトの`.github/agents/`に配置（`gh dev-pipeline`、または手動コピー） | `<project_root>/.github/dev-pipeline/` |
+| Claude Code版を対象プロジェクトの`.claude/`、またはユーザーの`~/.claude/`に配置 | `<project_root>/.claude/` |
+| 対象プロジェクトの`.agents/`配下（`.agents/skills/`、`.agents/agents/`など、ツール共通のディレクトリ）に配置 | `<project_root>/.agents/` |
+
+Copilot版だけ`.github/agents/`そのものにしないのは、VS Codeが`.github/agents/`直下の`.md`を拡張子`.agent.md`でなくてもすべてカスタムエージェントとして読み込むため。そこに置くと`pipeline-config`と`lessons-learned`がエージェント一覧に並び、選ばれればその中身がエージェントの指示として使われてしまう。
+
+フェーズ1の前に、`<config_dir>`を一度だけ次の順で確定し、以降この実行ではそれだけを使う。
+
+1. `<project_root>/.github/dev-pipeline/`・`<project_root>/.claude/`・`<project_root>/.agents/`の3箇所に`pipeline-config.md`か`lessons-learned.md`があるか確認する。1箇所だけにあれば、そこが`<config_dir>`。既存の蓄積がある場所を優先するのは、インストールの仕方を後から変えても設定と蓄積が引き継がれるようにするため。
+2. 複数箇所にある場合は、どちらかを黙って選ばない。チャットで直接ユーザーにどれを使うか確認し、残りを統合して削除するよう伝える。
+3. どこにも無い場合は、このオーケストレーター自身がインストールされている場所で決める: `<project_root>/.github/agents/`にあれば`.github/dev-pipeline/`、`<project_root>/.claude/`配下にあれば`.claude/`、`<project_root>/.agents/`配下にあれば`.agents/`。ユーザーグローバル（`~/.claude/`、`~/.copilot/`、VS Codeのユーザープロファイルなど）にインストールされていてプロジェクト側に定義が無い場合は、`<project_root>/.github/dev-pipeline/`とする。
+
+確定した`<config_dir>`は`pipeline-state.md`の`Config dir`行に記録する。
 
 この2つのパスを知っているのはオーケストレーターだけである。サブエージェントはパスを推測せず、渡された内容（抜粋）か、渡されたパスだけを読む。プロジェクトがこれらを別の場所に置いている場合、書き換えるのはこの節だけで済む。
 
-`docs/`に無い場合、`.github/agents/`・`.claude/`・リポジトリルートといった紛らわしい場所に同名ファイルが無いか一度だけ確認する。見つかった場合は**黙って無視せず**、そのファイルを今回の実行で使い、正規のパスへ移すようユーザーに伝える。config が読まれないままだとフェーズごとのルールが毎回無視され、lessons の追記先が分かれると蓄積が分断されるため、どちらも静かに失敗させてはならない。
+`<config_dir>`に無い場合、`docs/`・`.github/agents/`（どちらも以前の正規の場所）・リポジトリルートといった紛らわしい場所に同名ファイルが無いか一度だけ確認する。見つかった場合は**黙って無視せず**、そのファイルを今回の実行で使い、`<config_dir>`へ移す（`git mv`）ようユーザーに伝える。config が読まれないままだとフェーズごとのルールが毎回無視され、lessons の追記先が分かれると蓄積が分断されるため、どちらも静かに失敗させてはならない。
 
 ### プロジェクトのpipeline config
 
-フェーズ1の前に、`<project_root>/docs/pipeline-config.md`が存在するか確認する。
+フェーズ1の前に、`<config_dir>/pipeline-config.md`が存在するか確認する。
 
 存在する場合、それはプロジェクトのスタック概要とフェーズごとのルールを含んでいる。`## stack`節をすべてのサブエージェントへのプロンプトに含め、さらに各サブエージェントにはそのフェーズ専用の節を渡す:
 
@@ -135,7 +151,7 @@ Issueの内容が完了済みフェーズの正式な記録であり、やり直
 - `## review` → 4つの観点別コードレビュアー（security-reviewer / test-reviewer / structure-reviewer / convention-reviewer）の全員
 - `## publish` → pr-publisher
 
-存在せず、前節の紛らわしい場所にも見つからない場合は、リポジトリ（package.json、pom.xml / build.gradle、devcontainer設定、…）から自分でスタックを検出し、すべてのサブエージェントに1行程度のスタック概要を渡す。実行の最後に、ユーザーへ`docs/pipeline-config.md`の追加を提案する（テンプレート: dev-pipelineリポジトリの`templates/pipeline-config.md`）。
+存在せず、前節の紛らわしい場所にも見つからない場合は、リポジトリ（package.json、pom.xml / build.gradle、devcontainer設定、…）から自分でスタックを検出し、すべてのサブエージェントに1行程度のスタック概要を渡す。実行の最後に、ユーザーへ`<config_dir>/pipeline-config.md`の追加を提案する（テンプレート: dev-pipelineリポジトリの`templates/pipeline-config.md`）。
 
 ### 検証済みコマンド
 
@@ -191,6 +207,7 @@ gh api repos/{owner}/{repo}/issues/<issue番号>/comments \
 - Base SHA: abc1234
 - Mode: confirm-design | auto
 - Commands: pnpm typecheck / pnpm test / ./mvnw test
+- Config dir: .github/dev-pipeline/ | .claude/ | .agents/
 - [x] 1. requirements（review retry 1/2、承認済み）
 - [x] 2. design（review retry 0/2）
 - [ ] 3. implementation（step 2/4）
@@ -210,12 +227,12 @@ gh api repos/{owner}/{repo}/issues/<issue番号>/comments \
 
 ### Lessons learned（失敗の蓄積）
 
-`<project_root>/docs/lessons-learned.md`は、フェーズごとの文書とは別の累積ログ。上書きされることはなく追記のみで、パイプラインの実行をまたいで残り続けるため、過去の失敗が今後に活かされる。
+`<config_dir>/lessons-learned.md`は、フェーズごとの文書とは別の累積ログ。上書きされることはなく追記のみで、パイプラインの実行をまたいで残り続けるため、過去の失敗が今後に活かされる。
 
 - リポジトリにコミットする。意図的に`.scratch/`には置かない。特定のIssueに紐づかないものであり、無視されるディレクトリに置けば次のクローンで消え、失敗の蓄積という機能そのものが静かに無効になる。
 - 追記先は「パイプラインが読むプロジェクト側のファイル」で確定した1ファイルだけ。新しい`lessons-learned.md`を別の場所に作ってはならない。既存の蓄積と分断され、抜粋も片方しか渡らなくなる。
 - サブエージェントには、抜粋か、確定したこのパスのどちらかを渡す。サブエージェント側にパスを推測させない。
-- 更新した`docs/lessons-learned.md`は、その元になった修正のチェックポイントコミットと一緒にコミットする。コードの修正を伴わないフェーズ1・2の差し戻しについては、featureブランチ上で単独のコミットとして入れる。フェーズ1のエントリはブランチ作成後に書く（それまでは作業ツリーを汚さない）。
+- 更新した`<config_dir>/lessons-learned.md`は、その元になった修正のチェックポイントコミットと一緒にコミットする。コードの修正を伴わないフェーズ1・2の差し戻しについては、featureブランチ上で単独のコミットとして入れる。フェーズ1のエントリはブランチ作成後に書く（それまでは作業ツリーを汚さない）。
 
 形式。フェーズごとに1つの節とし、各エントリに日付を付ける:
 
@@ -403,5 +420,5 @@ autoモードであっても、常にまずチャットで、返信を待って�
 
 - PR URL、またはパイプラインが停止した場所とその理由
 - 恒久的な記録はIssue #<issue番号> そのものであること（要件定義書は本文、設計とレビュー結果はコメント）
-- `.scratch/<issue番号>/`内のローカル作業用コピーはgit管理外で、クローンし直すと残らないこと。この実行で追記があれば、コミットされている`docs/lessons-learned.md`もあること
+- `.scratch/<issue番号>/`内のローカル作業用コピーはgit管理外で、クローンし直すと残らないこと。この実行で追記があれば、コミットされている`<config_dir>/lessons-learned.md`もあること
 - 中断した実行は、どのクローンからでも`/dev-pipeline resume #<issue番号>`で再開できること

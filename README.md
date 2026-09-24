@@ -110,9 +110,9 @@ dev-pipeline/
 
 ### Lessons learned（失敗の蓄積）
 
-リトライループが発生した場合、原因と予防策が `docs/lessons-learned.md` にフェーズ別セクションで蓄積される。以降の実行では、各フェーズのサブエージェントに**該当セクションの抜粋だけ**が渡される。同一根本原因のエントリは重複追加せず既存エントリを更新し、約30件を超えたら統合を提案する。
+リトライループが発生した場合、原因と予防策が設定ディレクトリの `lessons-learned.md` にフェーズ別セクションで蓄積される。以降の実行では、各フェーズのサブエージェントに**該当セクションの抜粋だけ**が渡される。同一根本原因のエントリは重複追加せず既存エントリを更新し、約30件を超えたら統合を提案する。
 
-このファイルは `.scratch/` ではなく `docs/` に置き、**リポジトリにコミットする**。特定の Issue に紐づかない横断的なログであり、git 管理外のディレクトリに置くとクローンやマシンを変えた時点で失われ、「失敗の蓄積」という機能自体が静かに無効になるため。置き場所の詳細は「[置き場所は `docs/` に固定](#置き場所は-docs-に固定)」を参照。
+このファイルは `.scratch/` ではなく設定ディレクトリ（`.github/dev-pipeline/`・`.claude/`・`.agents/` のいずれか）に置き、**リポジトリにコミットする**。特定の Issue に紐づかない横断的なログであり、git 管理外のディレクトリに置くとクローンやマシンを変えた時点で失われ、「失敗の蓄積」という機能自体が静かに無効になるため。置き場所の詳細は「[置き場所はインストールの仕方で決まる](#置き場所はインストールの仕方で決まる)」を参照。
 
 予防策でサブエージェントを名指しするときは現在のエージェント名を使う（コードレビューなら4観点のレビュアー名。廃止された `code-reviewer` ではない）。抜粋を受け取ったレビュアーが、自分宛の指針かどうかを判断できる必要がある。追記のみのログなので既存エントリの名前は直さない。
 
@@ -145,7 +145,7 @@ cp -r skills/dev-pipeline ~/.claude/skills/
 
 ## 対象プロジェクト側の設定（pipeline-config.md・推奨）
 
-スタック固有の規約・欠陥パターンはエージェント定義にハードコードせず、**対象プロジェクト側**の `docs/pipeline-config.md` に置く。オーケストレーターが実行開始時にこれを読み、次のように配る。
+スタック固有の規約・欠陥パターンはエージェント定義にハードコードせず、**対象プロジェクト側**の `pipeline-config.md` に置く（置き場所はインストールの仕方で決まる。後述）。オーケストレーターが実行開始時にこれを読み、次のように配る。
 
 - `## stack` → 全サブエージェント
 - `## commands`（検証済みビルド/テストコマンド）→ ビルド・テストを行うフェーズ
@@ -154,20 +154,37 @@ cp -r skills/dev-pipeline ~/.claude/skills/
 `## commands` があると、各フェーズがコマンドをリポジトリから再発見せずに済み、トークン消費と誤ったコマンド推測の両方が減る。ない場合はオーケストレーターが一度だけ発見して `pipeline-state.md` に記録し、以降のフェーズに確定値として渡す。
 
 ```powershell
-# <target-project> は開発対象リポジトリのルート
-Copy-Item templates\pipeline-config.md <target-project>\docs\pipeline-config.md
+# <target-project> は開発対象リポジトリのルート。コピー先は後述の表の設定ディレクトリ
+New-Item -ItemType Directory -Force <target-project>\.github\dev-pipeline
+Copy-Item templates\pipeline-config.md <target-project>\.github\dev-pipeline\pipeline-config.md   # Copilot 版
+Copy-Item templates\pipeline-config.md <target-project>\.claude\pipeline-config.md           # Claude Code 版
+```
+
+```bash
+mkdir -p <target-project>/.github/dev-pipeline
+cp templates/pipeline-config.md <target-project>/.github/dev-pipeline/pipeline-config.md   # Copilot 版
+cp templates/pipeline-config.md <target-project>/.claude/pipeline-config.md          # Claude Code 版
 ```
 
 テンプレートは Vue 3 + TypeScript + Pinia + Vuetify + Vite + pnpm / Spring Boot + Flyway + PostgreSQL スタックの例になっているので、プロジェクトに合わせて編集する。ファイルがない場合、オーケストレーターはリポジトリからスタックを自動検出し、簡易なスタック概要を各エージェントに渡す（精度は config がある方が高い）。いずれの場合も実リポジトリの規約が常に優先される。
 
-### 置き場所は `docs/` に固定
+### 置き場所はインストールの仕方で決まる
 
-パイプラインが対象プロジェクトから読むファイルは、`docs/pipeline-config.md` と `docs/lessons-learned.md` の2つだけ。どちらも **`docs/` 直下**に置く。
+パイプラインが対象プロジェクトから読むファイルは、`pipeline-config.md` と `lessons-learned.md` の2つだけ。どちらも同じ**設定ディレクトリ**に置き、その場所は dev-pipeline をどうインストールしたかで決まる。
 
-- Copilot 版はエージェント定義を `.github/agents/` に置くため、この2ファイルもそこへ置いてしまいやすい。`.github/agents/` はエージェント定義のディレクトリであり、そこに置いた config は読まれず、フェーズごとのルールが毎回無視される。lessons も追記先が分かれて既存の蓄積と分断される。
-- Claude Code 版には `.github/agents/` が存在しない。`docs/` は2形式で共通に使える唯一の場所である。
+| インストールの仕方 | 設定ディレクトリ |
+| --- | --- |
+| Copilot 版を対象プロジェクトの `.github/agents/` に配置（`gh dev-pipeline` / 手動コピー） | `<project_root>/.github/dev-pipeline/` |
+| Claude Code 版を対象プロジェクトの `.claude/`、またはユーザーの `~/.claude/` に配置 | `<project_root>/.claude/` |
+| 対象プロジェクトの `.agents/` 配下（`.agents/skills/` など、ツール共通のディレクトリ）に配置 | `<project_root>/.agents/` |
+
+Copilot 版だけエージェント定義と同じ `.github/agents/` に置かないのは、VS Code が `.github/agents/` 直下の `.md` を拡張子 `.agent.md` でなくてもすべてカスタムエージェントとして読み込むため（[Custom agents in VS Code](https://code.visualstudio.com/docs/copilot/customization/custom-agents)）。そこに置くと `pipeline-config` と `lessons-learned` がエージェント一覧に並び、選ばれればその中身がエージェントの指示として使われてしまう。`.github/agents/` のサブディレクトリも避けている。今のところ VS Code はサブディレクトリを走査しないが、それは文書化された仕様ではなく、Copilot CLI や GitHub.com 側の扱いも明記されていないため。`.github/dev-pipeline/` はどのツールも読み込まない場所である。
+
+- オーケストレーターは実行開始時に3箇所を確認し、ファイルがある場所を設定ディレクトリとして使う。インストールの仕方を後から変えても、既存の config と蓄積はそのまま引き継がれる。
+- どこにも無い場合は、オーケストレーター自身がインストールされている場所で決める。ユーザーグローバルにインストールしていてプロジェクト側に定義が無い場合は、Claude Code 版なら `.claude/`、Copilot 版なら `.github/dev-pipeline/`。
+- 複数箇所にある場合は、どれを使うかをユーザーに確認する。黙ってどちらかを選ぶと、config が読まれなかったり lessons の蓄積が分断されたりするため。
 - このパスを知っているのはオーケストレーター（`src/dev-pipeline.md` の「パイプラインが読むプロジェクト側のファイル」）だけ。11 のサブエージェントはパスを持たず、渡された抜粋かパスだけを読む。プロジェクトの都合で置き場所を変える場合、書き換えるのはオーケストレーターの1箇所で済む。
-- `docs/` に無い場合、オーケストレーターは `.github/agents/` などの紛らわしい場所も確認する。見つかったら黙って無視せず、その実行では使ったうえで `docs/` へ移すよう促す。
+- 以前の正規の場所だった `docs/`・`.github/agents/` や、リポジトリルートにある場合、オーケストレーターは黙って無視せず、その実行では使ったうえで設定ディレクトリへ移す（`git mv`）よう促す。
 
 ## 使い方（Claude Code 版）
 
@@ -212,7 +229,7 @@ gh dev-pipeline [target-dir]
 
 例外は、このリポジトリがかつて配布し、その後廃止したエージェント定義（旧 `code-reviewer.agent.md` など）だけである。これが対象側に残ると、陳腐化した description が存在しないフェーズを宣伝し続け、エージェント一覧から誤って選ばれる余地も残る。そこで、`gh-dev-pipeline` の `RETIRED_AGENTS` に名前が載っていて、かつ自動生成ファイルのマーカーを含むファイルだけを削除する。同名でもマーカーのないファイルは残し、その旨を表示する。エージェントを廃止するときは `RETIRED_AGENTS` に名前を追加すること。
 
-`docs/pipeline-config.md` が無い場合は、テンプレートのコピー手順を案内するメッセージが出る。config 自体は自動生成しない（テンプレートは Vue 3 + Spring Boot スタックの例であり、別スタックのプロジェクトにそのまま置くと誤った前提が各フェーズに配られる）。
+`.github/dev-pipeline/pipeline-config.md` が無い場合は、テンプレートのコピー手順を案内するメッセージが出る。以前の置き場所（`docs/` または `.github/agents/`）に `pipeline-config.md` / `lessons-learned.md` が残っている場合は、`.github/dev-pipeline/` への移動を案内する。config 自体は自動生成しない（テンプレートは Vue 3 + Spring Boot スタックの例であり、別スタックのプロジェクトにそのまま置くと誤った前提が各フェーズに配られる）。
 
 #### 手動コピー
 
@@ -342,7 +359,7 @@ push / PR 時には GitHub Actions（`generate-check.yml`）が両スクリプ�
 - **サブエージェントの結果を待つ** — Claude Code の対話セッションではサブエージェントは常にバックグラウンドで走り、結果は完了通知として後のターンに届く（フォアグラウンドは要求できない）。オーケストレーターには「通知が届くまで次の呼び出しをしない・結果を予測しない・代筆しない」を明記し、4つのコードレビュアーだけは同時に走らせて全部揃ってから読む、としている。フェーズエージェントが AskUserQuestion のようなバックグラウンドで使えないツールに依存しない構成（ユーザーへの質問はすべてオーケストレーターが行う）も、この前提から来ている。
 - **説明文は自動委譲を誘わない** — Claude Code のサブエージェントの `description` は、Claude が自動で委譲先を選ぶ判断材料になる。フェーズエージェントは `~/.claude/agents/` にユーザー全体で置かれるため、`description` に「積極的に使え（PROACTIVELY）」を入れると、パイプラインと無関係なセッションでも呼ばれ得る。そのため各 `description` は「何をするか・dev-pipeline のどのフェーズでオーケストレーターが呼ぶか・何に使わないか」だけを書き、自動委譲を促す文言は入れない。Copilot 版は同じ意図を `disable-model-invocation: true` + オーケストレーターの `agents` 明示列挙で表す。
 - **オーケストレーターはユーザーだけが起動する** — スキルの frontmatter に `disable-model-invocation: true` を付け、`/dev-pipeline` でのみ起動できるようにしている。Issue 作成・push・PR 作成という副作用のあるワークフローはユーザーが明示的に起動すべき、というスキルのガイドラインどおり。副次的に、説明文がセッションのコンテキストに常駐しなくなる。
-- **エージェントの `memory` は使わない** — Claude Code のサブエージェントには永続メモリ（`memory: project` など）があるが、このパイプラインでは使わない。失敗の蓄積は `docs/lessons-learned.md` が担い、そこにはフェーズごとの節・重複統合・オーケストレーターによる抜粋という運用が既にある。同じ役割を2箇所に持つと片方が静かに古くなる。エージェントメモリは Claude Code 版にしかないため、Copilot 版と挙動が分かれるのも避けたい。
+- **エージェントの `memory` は使わない** — Claude Code のサブエージェントには永続メモリ（`memory: project` など）があるが、このパイプラインでは使わない。失敗の蓄積は設定ディレクトリの `lessons-learned.md` が担い、そこにはフェーズごとの節・重複統合・オーケストレーターによる抜粋という運用が既にある。同じ役割を2箇所に持つと片方が静かに古くなる。エージェントメモリは Claude Code 版にしかないため、Copilot 版と挙動が分かれるのも避けたい。
 - **検証指示を重ねない** — 「最終確認ステップを入れる」「回答を再確認する」「サブエージェントで検証する」といった指示は、Opus 5.5 が既に自前でやっていることと重複して過剰検証を招くので追加しない。検証は実コマンドを走らせる `implementer` / `test-engineer` の実作業としてのみ持たせる。例外として、オーケストレーターはサブエージェントの「完了」を受け入れる前に、根拠（文書の存在、コマンドと出力）が添えられているかだけを確かめる。内容の再検証ではなく、根拠のない完了報告を次のフェーズに流さないための確認。
 - **考えさせる指示を書かない** — Opus 5.5 は常に思考してから応答し、思考の深さはエフォート設定で決まる。「よく考えて」「段階的に考えて」は応答開始を遅らせるだけなので入れない。推論過程を応答本文に書き出させる指示も、`reasoning_extraction` の拒否対象になり得るため入れない（判断の理由を一文で添えさせるのは推論の書き出しではないので対象外）。
 - **完了条件を渡す** — Opus 5.5 は完了条件が明示されていると、途中で指示を仰がずに最後までやり切る。オーケストレーターは各委譲にそのフェーズの完了条件を1文で含める。
@@ -360,7 +377,7 @@ push / PR 時には GitHub Actions（`generate-check.yml`）が両スクリプ�
 
 ## 前提・制約
 
-- スタック固有の知識（規約・欠陥パターン）は対象プロジェクトの `docs/pipeline-config.md` から供給する。テンプレート（`templates/pipeline-config.md`）は SPA（Vue 3 + TypeScript + Pinia + Vuetify + Vite + pnpm / Spring Boot + Flyway + PostgreSQL、devcontainer 開発）の例。実リポジトリの規約が常に優先される。
+- スタック固有の知識（規約・欠陥パターン）は対象プロジェクトの設定ディレクトリにある `pipeline-config.md` から供給する。テンプレート（`templates/pipeline-config.md`）は SPA（Vue 3 + TypeScript + Pinia + Vuetify + Vite + pnpm / Spring Boot + Flyway + PostgreSQL、devcontainer 開発）の例。実リポジトリの規約が常に優先される。
 - 設計フェーズでは、クライアント/サーバー横断の変更に対して API 契約（エンドポイント・リクエスト/レスポンス型・エラー応答）の明文化が必須。両サイドはこの契約に対して実装する。
 - 受け入れ基準には ID（AC-1, AC-2, …）と検証方法タグ（自動テスト / 手動確認）を付与し、テストレポートで基準ごとの検証結果をトレースする。
   - ID は文書間（要件定義書 → 設計書の AC マッピング → テストレポート → レビュー）の参照子であり、一度振ったら変えない（削除は欠番、追加は末尾）。
