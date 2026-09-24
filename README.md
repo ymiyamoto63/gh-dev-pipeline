@@ -208,7 +208,7 @@ gh dev-pipeline [target-dir]
 
 `copilot/agents/*.agent.md` と `copilot/prompts/*.prompt.md` が `<target-dir>/.github/agents/` と `<target-dir>/.github/prompts/` にコピーされる。更新時は `gh extension upgrade dev-pipeline && gh dev-pipeline` を再度実行する。
 
-インストールは単純なコピーではなく**同期**である。このリポジトリから削除された定義は、対象リポジトリからも削除される（`*.agent.md` / `*.prompt.md` のうち、現在配布していないファイルだけ。手で置いた他のファイルは触らない）。旧 `code-reviewer.agent.md` のように廃止された定義が対象側に残ると、陳腐化した description が存在しないフェーズを宣伝し続け、エージェント一覧から誤って選ばれる余地も残るため。
+エージェント定義については、インストールは単純なコピーではなく**同期**である。このリポジトリから削除されたエージェント定義は、対象リポジトリからも削除される（`.github/agents/` の `*.agent.md` のうち、現在配布していないファイルだけ）。`.github/prompts/` はコピーするだけで削除は行わない。プロジェクト独自のプロンプトファイルが置かれることが多く、それを消すのはインストーラーの役割ではないため。旧 `code-reviewer.agent.md` のように廃止された定義が対象側に残ると、陳腐化した description が存在しないフェーズを宣伝し続け、エージェント一覧から誤って選ばれる余地も残るため。
 
 `docs/pipeline-config.md` が無い場合は、テンプレートのコピー手順を案内するメッセージが出る。config 自体は自動生成しない（テンプレートは Vue 3 + Spring Boot スタックの例であり、別スタックのプロジェクトにそのまま置くと誤った前提が各フェーズに配られる）。
 
