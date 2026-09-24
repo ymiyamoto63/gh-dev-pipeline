@@ -327,6 +327,7 @@ push / PR 時には GitHub Actions（`generate-check.yml`）が両スクリプ�
 - [Claude Opus 5.5 のプロンプティング](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5-5) と [Getting the most out of Opus 5.5](https://claude.dev/blog/getting-the-most-out-of-opus-5-5/)（オーケストレーター、要件定義・設計エージェント、Claude Code 版の要件・設計レビュアーが動くモデル）
 - [Claude Sonnet 5 のプロンプティング](https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/prompting-claude-sonnet-5)（実装・テスト・コードレビューが動くモデル）
 - [Claude Fable 5.1 のプロンプティング](https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/prompting-claude-fable-5-1)（Claude Code 版のオーケストレーターは親セッションのモデルで動き、Opus 5.5 のことも Fable 5.1 のこともある）
+- OpenAI の [GPT-6 のモデルガイダンス](https://developers.openai.com/api/docs/guides/latest-model) と [推論モデルのベストプラクティス](https://developers.openai.com/api/docs/guides/reasoning-best-practices)（Copilot 版の要件・設計・コードレビュアーが動く GPT-6 Sol 向け。Sol 専用のプロンプティングガイドは公開されていないため、GPT-6 ファミリーと推論モデルの共通ガイドに従う）
 - [Claude 5 世代のコンテキストエンジニアリングの新ルール](https://claudefa.st/blog/guide/mechanics/claude-5-context-engineering)
 
 定義形式は、Claude Code 側は [サブエージェント](https://code.claude.com/docs/en/sub-agents) と [スキル](https://code.claude.com/docs/en/skills) のリファレンスに、Copilot 側は VS Code の [カスタムエージェント](https://code.visualstudio.com/docs/agent-customization/custom-agents) / [サブエージェント](https://code.visualstudio.com/docs/agents/run/subagents) のリファレンスに従う。
@@ -345,6 +346,7 @@ push / PR 時には GitHub Actions（`generate-check.yml`）が両スクリプ�
 - **完了条件を渡す** — Opus 5.5 は完了条件が明示されていると、途中で指示を仰がずに最後までやり切る。オーケストレーターは各委譲にそのフェーズの完了条件を1文で含める。
 - **着手前に広く探させる** — Opus 5.5 はすぐ作業に取りかかる傾向があり、ガイドは依頼が名指ししていない情報源も調べさせることを勧めている。要件定義と設計のエージェントとそのレビュアーには、類似機能・呼び出し元・既存テスト・設定・`docs/` など、依頼や文書が触れていない箇所も探させる。調べても確認できなかったことは、どこを調べたかを添えて「未確認」（レビュアーは確度低）と書かせる。
 - **レビュー指摘には根拠を付けさせる** — ガイドのレビュー用プロンプト例は、各指摘に場所・なぜ誤りか・どう示せるかを求めている。要件・設計レビュアーの各指摘には、食い違う2箇所の引用やリポジトリのファイルと行といった根拠を必須にし、差し戻しを受けた側が文書を開き直さずに確認できるようにしている。絞り込み（「マージを止めるものだけ」）は例から取り入れず、全件報告 + タグ付けの方針は維持する。
+- **レビュアーには完了条件を持たせ、途中で質問させない** — OpenAI の推論モデル向けガイドは、成功の条件を具体的に書き、満たすまで推論と反復を続けさせることを勧めている。要件・設計レビュアーの手順の最後に「すべての観点・すべての AC・（設計なら）すべての対象ファイルを実物と突き合わせた」「すべての指摘に根拠とタグがある」という完了条件を置き、満たすまで手順に戻らせる。また GPT-6 は以前のモデルより確認の質問をしやすく、ガイドは確認の前に文脈から許された作業を済ませるよう勧めている。サブエージェントの質問には誰も答えられないため、判断のつかない点は要判断・確度低としてレポートに含め、最後まで終えさせる。これらはどちらのモデルでも意味が通るので、Claude Code 版（Opus 5.5）と共通の本文に書いている。
 - **委譲に上限を設ける** — オーケストレーターの「委譲の規律」で、生成するサブエージェントを定義済みの11のフェーズエージェントに限定し、調査用や、定義済みレビュアー以外の検証用の追加エージェントを禁じている。
 - **レビューは絞り込ませず、フィルタは呼び出し元に置く** — 「重大な指摘のみ報告」「保守的に」といった指示はモデルが文字通り従って報告件数を落とす。レビューを担う Sonnet 5 は絞り込み指示への追従がさらに忠実で、「調査はしたが報告しない」という形で再現率が落ちる。そのためレビュアー定義には「この段階の目標はカバレッジであり、絞り込みは下流が行う」ことを明記する。すべてのレビュアー（要件・設計・4観点のコードレビュー）には全件報告 + 深刻度タグ付けをさせ、どれがゲートになるかはオーケストレーターが決める。省いてよいものの基準は「重要なもの」のような質的な語ではなく具体的に書く（フォーマッタが管理する純粋な整形の好みのみ）。
 - **指示の適用範囲を明示する** — Sonnet 5 は指示を文字通り・明示的に解釈し、1つの項目への指示を他の項目へ暗黙に一般化しない。広く適用したい指示は範囲を明示する（例:「変更した全サイドのテストスイートを実行」「すべての受け入れ基準を表に載せる」）。
