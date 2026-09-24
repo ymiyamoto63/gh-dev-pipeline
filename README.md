@@ -112,7 +112,7 @@ dev-pipeline/
 
 リトライループが発生した場合、原因と予防策が設定ディレクトリの `lessons-learned.md` にフェーズ別セクションで蓄積される。以降の実行では、各フェーズのサブエージェントに**該当セクションの抜粋だけ**が渡される。同一根本原因のエントリは重複追加せず既存エントリを更新し、約30件を超えたら統合を提案する。
 
-このファイルは `.scratch/` ではなく設定ディレクトリ（`.github/agents/`・`.claude/`・`.agents/` のいずれか）に置き、**リポジトリにコミットする**。特定の Issue に紐づかない横断的なログであり、git 管理外のディレクトリに置くとクローンやマシンを変えた時点で失われ、「失敗の蓄積」という機能自体が静かに無効になるため。置き場所の詳細は「[置き場所はインストールの仕方で決まる](#置き場所はインストールの仕方で決まる)」を参照。
+このファイルは `.scratch/` ではなく設定ディレクトリ（`.github/dev-pipeline/`・`.claude/`・`.agents/` のいずれか）に置き、**リポジトリにコミットする**。特定の Issue に紐づかない横断的なログであり、git 管理外のディレクトリに置くとクローンやマシンを変えた時点で失われ、「失敗の蓄積」という機能自体が静かに無効になるため。置き場所の詳細は「[置き場所はインストールの仕方で決まる](#置き場所はインストールの仕方で決まる)」を参照。
 
 予防策でサブエージェントを名指しするときは現在のエージェント名を使う（コードレビューなら4観点のレビュアー名。廃止された `code-reviewer` ではない）。抜粋を受け取ったレビュアーが、自分宛の指針かどうかを判断できる必要がある。追記のみのログなので既存エントリの名前は直さない。
 
@@ -155,12 +155,14 @@ cp -r skills/dev-pipeline ~/.claude/skills/
 
 ```powershell
 # <target-project> は開発対象リポジトリのルート。コピー先は後述の表の設定ディレクトリ
-Copy-Item templates\pipeline-config.md <target-project>\.github\agents\pipeline-config.md   # Copilot 版
+New-Item -ItemType Directory -Force <target-project>\.github\dev-pipeline
+Copy-Item templates\pipeline-config.md <target-project>\.github\dev-pipeline\pipeline-config.md   # Copilot 版
 Copy-Item templates\pipeline-config.md <target-project>\.claude\pipeline-config.md           # Claude Code 版
 ```
 
 ```bash
-cp templates/pipeline-config.md <target-project>/.github/agents/pipeline-config.md   # Copilot 版
+mkdir -p <target-project>/.github/dev-pipeline
+cp templates/pipeline-config.md <target-project>/.github/dev-pipeline/pipeline-config.md   # Copilot 版
 cp templates/pipeline-config.md <target-project>/.claude/pipeline-config.md          # Claude Code 版
 ```
 
@@ -172,15 +174,17 @@ cp templates/pipeline-config.md <target-project>/.claude/pipeline-config.md     
 
 | インストールの仕方 | 設定ディレクトリ |
 | --- | --- |
-| Copilot 版を対象プロジェクトの `.github/agents/` に配置（`gh dev-pipeline` / 手動コピー） | `<project_root>/.github/agents/` |
+| Copilot 版を対象プロジェクトの `.github/agents/` に配置（`gh dev-pipeline` / 手動コピー） | `<project_root>/.github/dev-pipeline/` |
 | Claude Code 版を対象プロジェクトの `.claude/`、またはユーザーの `~/.claude/` に配置 | `<project_root>/.claude/` |
 | 対象プロジェクトの `.agents/` 配下（`.agents/skills/` など、ツール共通のディレクトリ）に配置 | `<project_root>/.agents/` |
 
+Copilot 版だけエージェント定義と同じ `.github/agents/` に置かないのは、VS Code が `.github/agents/` 直下の `.md` を拡張子 `.agent.md` でなくてもすべてカスタムエージェントとして読み込むため（[Custom agents in VS Code](https://code.visualstudio.com/docs/copilot/customization/custom-agents)）。そこに置くと `pipeline-config` と `lessons-learned` がエージェント一覧に並び、選ばれればその中身がエージェントの指示として使われてしまう。`.github/agents/` のサブディレクトリも避けている。今のところ VS Code はサブディレクトリを走査しないが、それは文書化された仕様ではなく、Copilot CLI や GitHub.com 側の扱いも明記されていないため。`.github/dev-pipeline/` はどのツールも読み込まない場所である。
+
 - オーケストレーターは実行開始時に3箇所を確認し、ファイルがある場所を設定ディレクトリとして使う。インストールの仕方を後から変えても、既存の config と蓄積はそのまま引き継がれる。
-- どこにも無い場合は、オーケストレーター自身がインストールされている場所で決める。ユーザーグローバルにインストールしていてプロジェクト側に定義が無い場合は、Claude Code 版なら `.claude/`、Copilot 版なら `.github/agents/`。
+- どこにも無い場合は、オーケストレーター自身がインストールされている場所で決める。ユーザーグローバルにインストールしていてプロジェクト側に定義が無い場合は、Claude Code 版なら `.claude/`、Copilot 版なら `.github/dev-pipeline/`。
 - 複数箇所にある場合は、どれを使うかをユーザーに確認する。黙ってどちらかを選ぶと、config が読まれなかったり lessons の蓄積が分断されたりするため。
 - このパスを知っているのはオーケストレーター（`src/dev-pipeline.md` の「パイプラインが読むプロジェクト側のファイル」）だけ。11 のサブエージェントはパスを持たず、渡された抜粋かパスだけを読む。プロジェクトの都合で置き場所を変える場合、書き換えるのはオーケストレーターの1箇所で済む。
-- 以前の正規の場所だった `docs/` やリポジトリルートにある場合、オーケストレーターは黙って無視せず、その実行では使ったうえで設定ディレクトリへ移す（`git mv`）よう促す。
+- 以前の正規の場所だった `docs/`・`.github/agents/` や、リポジトリルートにある場合、オーケストレーターは黙って無視せず、その実行では使ったうえで設定ディレクトリへ移す（`git mv`）よう促す。
 
 ## 使い方（Claude Code 版）
 
@@ -225,7 +229,7 @@ gh dev-pipeline [target-dir]
 
 例外は、このリポジトリがかつて配布し、その後廃止したエージェント定義（旧 `code-reviewer.agent.md` など）だけである。これが対象側に残ると、陳腐化した description が存在しないフェーズを宣伝し続け、エージェント一覧から誤って選ばれる余地も残る。そこで、`gh-dev-pipeline` の `RETIRED_AGENTS` に名前が載っていて、かつ自動生成ファイルのマーカーを含むファイルだけを削除する。同名でもマーカーのないファイルは残し、その旨を表示する。エージェントを廃止するときは `RETIRED_AGENTS` に名前を追加すること。
 
-`.github/agents/pipeline-config.md` が無い場合は、テンプレートのコピー手順を案内するメッセージが出る。旧来の `docs/pipeline-config.md` / `docs/lessons-learned.md` が残っている場合は、`.github/agents/` への移動を案内する。config 自体は自動生成しない（テンプレートは Vue 3 + Spring Boot スタックの例であり、別スタックのプロジェクトにそのまま置くと誤った前提が各フェーズに配られる）。
+`.github/dev-pipeline/pipeline-config.md` が無い場合は、テンプレートのコピー手順を案内するメッセージが出る。以前の置き場所（`docs/` または `.github/agents/`）に `pipeline-config.md` / `lessons-learned.md` が残っている場合は、`.github/dev-pipeline/` への移動を案内する。config 自体は自動生成しない（テンプレートは Vue 3 + Spring Boot スタックの例であり、別スタックのプロジェクトにそのまま置くと誤った前提が各フェーズに配られる）。
 
 #### 手動コピー
 

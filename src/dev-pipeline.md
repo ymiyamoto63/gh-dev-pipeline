@@ -128,21 +128,23 @@ Issueの内容が完了済みフェーズの正式な記録であり、やり直
 
 | インストールの仕方 | `<config_dir>` |
 | --- | --- |
-| GitHub Copilot版を対象プロジェクトの`.github/agents/`に配置（`gh dev-pipeline`、または手動コピー） | `<project_root>/.github/agents/` |
+| GitHub Copilot版を対象プロジェクトの`.github/agents/`に配置（`gh dev-pipeline`、または手動コピー） | `<project_root>/.github/dev-pipeline/` |
 | Claude Code版を対象プロジェクトの`.claude/`、またはユーザーの`~/.claude/`に配置 | `<project_root>/.claude/` |
 | 対象プロジェクトの`.agents/`配下（`.agents/skills/`、`.agents/agents/`など、ツール共通のディレクトリ）に配置 | `<project_root>/.agents/` |
 
+Copilot版だけ`.github/agents/`そのものにしないのは、VS Codeが`.github/agents/`直下の`.md`を拡張子`.agent.md`でなくてもすべてカスタムエージェントとして読み込むため。そこに置くと`pipeline-config`と`lessons-learned`がエージェント一覧に並び、選ばれればその中身がエージェントの指示として使われてしまう。
+
 フェーズ1の前に、`<config_dir>`を一度だけ次の順で確定し、以降この実行ではそれだけを使う。
 
-1. `<project_root>/.github/agents/`・`<project_root>/.claude/`・`<project_root>/.agents/`の3箇所に`pipeline-config.md`か`lessons-learned.md`があるか確認する。1箇所だけにあれば、そこが`<config_dir>`。既存の蓄積がある場所を優先するのは、インストールの仕方を後から変えても設定と蓄積が引き継がれるようにするため。
+1. `<project_root>/.github/dev-pipeline/`・`<project_root>/.claude/`・`<project_root>/.agents/`の3箇所に`pipeline-config.md`か`lessons-learned.md`があるか確認する。1箇所だけにあれば、そこが`<config_dir>`。既存の蓄積がある場所を優先するのは、インストールの仕方を後から変えても設定と蓄積が引き継がれるようにするため。
 2. 複数箇所にある場合は、どちらかを黙って選ばない。{{claude:AskUserQuestion経由で}}{{copilot:チャットで直接}}ユーザーにどれを使うか確認し、残りを統合して削除するよう伝える。
-3. どこにも無い場合は、このオーケストレーター自身がインストールされている場所で決める: `<project_root>/.github/agents/`にあれば`.github/agents/`、`<project_root>/.claude/`配下にあれば`.claude/`、`<project_root>/.agents/`配下にあれば`.agents/`。ユーザーグローバル（`~/.claude/`、`~/.copilot/`、VS Codeのユーザープロファイルなど）にインストールされていてプロジェクト側に定義が無い場合は、{{claude:`<project_root>/.claude/`}}{{copilot:`<project_root>/.github/agents/`}}とする。
+3. どこにも無い場合は、このオーケストレーター自身がインストールされている場所で決める: `<project_root>/.github/agents/`にあれば`.github/dev-pipeline/`、`<project_root>/.claude/`配下にあれば`.claude/`、`<project_root>/.agents/`配下にあれば`.agents/`。ユーザーグローバル（`~/.claude/`、`~/.copilot/`、VS Codeのユーザープロファイルなど）にインストールされていてプロジェクト側に定義が無い場合は、{{claude:`<project_root>/.claude/`}}{{copilot:`<project_root>/.github/dev-pipeline/`}}とする。
 
 確定した`<config_dir>`は`pipeline-state.md`の`Config dir`行に記録する。
 
 この2つのパスを知っているのはオーケストレーターだけである。サブエージェントはパスを推測せず、渡された内容（抜粋）か、渡されたパスだけを読む。プロジェクトがこれらを別の場所に置いている場合、書き換えるのはこの節だけで済む。
 
-`<config_dir>`に無い場合、`docs/`（以前の正規の場所）・リポジトリルートといった紛らわしい場所に同名ファイルが無いか一度だけ確認する。見つかった場合は**黙って無視せず**、そのファイルを今回の実行で使い、`<config_dir>`へ移す（`git mv`）ようユーザーに伝える。config が読まれないままだとフェーズごとのルールが毎回無視され、lessons の追記先が分かれると蓄積が分断されるため、どちらも静かに失敗させてはならない。
+`<config_dir>`に無い場合、`docs/`・`.github/agents/`（どちらも以前の正規の場所）・リポジトリルートといった紛らわしい場所に同名ファイルが無いか一度だけ確認する。見つかった場合は**黙って無視せず**、そのファイルを今回の実行で使い、`<config_dir>`へ移す（`git mv`）ようユーザーに伝える。config が読まれないままだとフェーズごとのルールが毎回無視され、lessons の追記先が分かれると蓄積が分断されるため、どちらも静かに失敗させてはならない。
 
 ### プロジェクトのpipeline config
 
@@ -213,7 +215,7 @@ gh api repos/{owner}/{repo}/issues/<issue番号>/comments \
 - Base SHA: abc1234
 - Mode: confirm-design | auto
 - Commands: pnpm typecheck / pnpm test / ./mvnw test
-- Config dir: .github/agents/ | .claude/ | .agents/
+- Config dir: .github/dev-pipeline/ | .claude/ | .agents/
 - [x] 1. requirements（review retry 1/2、承認済み）
 - [x] 2. design（review retry 0/2）
 - [ ] 3. implementation（step 2/4）
