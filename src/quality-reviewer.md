@@ -4,6 +4,7 @@ name: quality-reviewer
 description: コード変更（diff）を構造とルール準拠の観点 — 1ファイル1責務、機能・モジュール・層の境界の遵守、クライアント/サーバー間コントラクトの一致、設計書との整合、既存の抽象化の再発明、不要な複雑さ、周辺の既存コードとの適合（命名、配置、エラーハンドリング、イディオム）、プロジェクトのルール文書・lint設定への準拠、言語・フレームワークのベストプラクティス、pipeline configのスタック固有の欠陥パターン、依存関係の整合 — に絞ってレビューする。dev-pipelineのフェーズ5で、test-engineerの後に、他の2つの観点別レビュアー（security-reviewer / test-reviewer）と並行してオーケストレーターが呼び出す。問題の修正には使わない — 発見事項を呼び出し元に報告するだけ。
 tools: Read, Write, Grep, Glob, Bash
 model: sonnet
+effort: medium
 ---
 <<<copilot>>>
 ---
