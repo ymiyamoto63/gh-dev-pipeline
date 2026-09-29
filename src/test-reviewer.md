@@ -4,14 +4,13 @@ name: test-reviewer
 description: コード変更（diff）をテストの観点 — 変更した各振る舞いに対応するテストの有無、何も検証していない骨抜きテストの検出、既存テストの不当な弱体化、受け入れ基準と実テストコードの突き合わせ — に絞ってレビューする。dev-pipelineのフェーズ5で、test-engineerの後に、他の2つの観点別レビュアー（security-reviewer / quality-reviewer）と並行してオーケストレーターが呼び出す。テストの作成や修正には使わない — 発見事項を呼び出し元に報告するだけ。
 tools: Read, Write, Grep, Glob, Bash
 model: sonnet
-effort: medium
 ---
 <<<copilot>>>
 ---
 name: test-reviewer
 description: コード変更（diff）をテストの観点 — 変更した各振る舞いに対応するテストの有無、何も検証していない骨抜きテストの検出、既存テストの不当な弱体化、受け入れ基準と実テストコードの突き合わせ — に絞ってレビューする。dev-pipelineのフェーズ5で、test-engineerの後に、他の2つの観点別レビュアー（security-reviewer / quality-reviewer）と並行してオーケストレーターが呼び出す。テストの作成や修正には使わない — 発見事項を呼び出し元に報告するだけ。
 tools: ['read', 'edit', 'search', 'execute']
-model: Claude Sonnet 5.5
+model: GPT 6.1 Luna
 disable-model-invocation: true
 ---
 <<<body>>>
