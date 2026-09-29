@@ -8,7 +8,7 @@
 # mean "stale".
 #
 # The one exception is an agent this repo used to ship and has since retired
-# (e.g. code-reviewer, replaced by the four per-aspect reviewers). Left behind,
+# (e.g. code-reviewer, replaced by the per-aspect reviewers). Left behind,
 # its stale description still advertises a phase that no longer exists and it
 # can be picked from the agent list by mistake. Such files are removed only when
 # the name is in RETIRED_AGENTS and the file still carries the generated-file
@@ -29,6 +29,8 @@ mkdir -p "$TARGET_DIR/.github/agents" "$TARGET_DIR/.github/prompts"
 # retiring an agent; never list a name that is still shipped.
 RETIRED_AGENTS=(
   code-reviewer.agent.md
+  structure-reviewer.agent.md
+  convention-reviewer.agent.md
 )
 GENERATED_MARKER='<!-- 自動生成ファイル:'
 
