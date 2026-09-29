@@ -10,7 +10,7 @@ model: sonnet
 name: implementer
 description: 承認済みの設計書の1つの実装ステップ（またはスコープを絞った小さなステップ群）のコード変更を書く。dev-pipelineのフェーズ3で、software-architectの後にオーケストレーターがステップごとに呼び出す。ステップごとに独立して検証可能な場合は、複数ステップからなる設計全体を一度に渡さないこと。探索的な調査には使わないこと。
 tools: ['read', 'edit', 'search', 'execute']
-model: Claude Sonnet 5
+model: Claude Sonnet 5.5
 disable-model-invocation: true
 ---
 <<<body>>>
