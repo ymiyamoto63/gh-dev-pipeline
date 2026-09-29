@@ -2,7 +2,7 @@
 name: test-engineer
 description: 実装が要件定義書の受け入れ基準を満たしているかを検証するテストを作成・実行し、実際のコマンド出力を根拠に合否を報告する。dev-pipelineのフェーズ4で、implementerの後、観点別コードレビュアーの前にオーケストレーターが呼び出す。発見したバグの修正には使わないこと — 失敗を呼び出し元に報告し、呼び出し元がimplementerに差し戻す。
 tools: ['read', 'edit', 'search', 'execute']
-model: Claude Sonnet 5
+model: Claude Sonnet 5.5
 disable-model-invocation: true
 ---
 <!-- 自動生成ファイル: dev-pipelineリポジトリ（https://github.com/ymiyamoto63/gh-dev-pipeline）の src/test-engineer.md から生成。編集はそのリポジトリの src/test-engineer.md で行い tools/generate.ps1（または tools/generate.sh）を実行して再生成し、生成物をコピーし直すこと。インストール先にコピーされたこのファイルを直接編集しないこと（次回の更新で上書きされる）。 -->
