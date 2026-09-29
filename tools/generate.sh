@@ -14,6 +14,11 @@
 #   - A non-empty source line that renders to an empty string (it held only
 #     markers for the other format) is dropped entirely.
 #   - An AUTO-GENERATED notice is inserted between the frontmatter and the body.
+#   - A body block delimited by <<<phase:SLUG>>> ... <<<endphase>>> is a phase section.
+#     Copilot output keeps it inline (the delimiter lines are dropped). Claude output keeps
+#     only the block's first line (the heading) plus a pointer sentence in the main file, and
+#     writes the rest to <main-output-dir>/phases/SLUG.md, which the orchestrator Reads on
+#     entering the phase (smaller always-loaded prompt).
 #
 # tools/generate.ps1 is the same generator for PowerShell; keep the two behaviorally identical.
 #
@@ -70,9 +75,20 @@ render_line() { # $1=line $2=keep-format $3=drop-format
   rendered=$out
 }
 
-build_output() { # $1=src-name $2=format ; result in $built
-  local name=$1 fmt=$2 other src line cur=""
+phase_pointer() { # $1=slug
+  printf '\n**このフェーズに入る直前に、このスキルのディレクトリにある`phases/%s.md`をReadツールで全文読み、その手順に従う。読まずにこのフェーズを始めない。**\n' "$1"
+}
+
+notice() { # $1=src-name
+  printf '<!-- 自動生成ファイル: dev-pipelineリポジトリ（https://github.com/ymiyamoto63/gh-dev-pipeline）の src/%s.md から生成。編集はそのリポジトリの src/%s.md で行い tools/generate.ps1（または tools/generate.sh）を実行して再生成し、生成物をコピーし直すこと。インストール先にコピーされたこのファイルを直接編集しないこと（次回の更新で上書きされる）。 -->\n' "$1" "$1"
+}
+
+# result in $built; for the Claude format also $phase_slugs / $phase_bodies (parallel arrays)
+build_output() { # $1=src-name $2=format
+  local name=$1 fmt=$2 other src line cur="" slug="" pfirst=0 pbody="" text
   src="src/$name.md"
+  phase_slugs=()
+  phase_bodies=()
   if [[ ! -f $src ]]; then
     echo "missing source file: $src" >&2
     exit 1
@@ -89,39 +105,74 @@ build_output() { # $1=src-name $2=format ; result in $built
       '<<<copilot>>>') cur=copilot; continue ;;
       '<<<body>>>')
         cur=body
-        built+="<!-- 自動生成ファイル: dev-pipelineリポジトリ（https://github.com/ymiyamoto63/gh-dev-pipeline）の src/$name.md から生成。編集はそのリポジトリの src/$name.md で行い tools/generate.ps1（または tools/generate.sh）を実行して再生成し、生成物をコピーし直すこと。インストール先にコピーされたこのファイルを直接編集しないこと（次回の更新で上書きされる）。 -->"$'\n'
+        built+="$(notice "$name")"$'\n'
+        continue ;;
+      '<<<phase:'*'>>>')
+        [[ $cur == body ]] || { echo "$src: phase marker outside body" >&2; exit 1; }
+        [[ -z $slug ]] || { echo "$src: nested phase marker" >&2; exit 1; }
+        slug=${line#'<<<phase:'}; slug=${slug%'>>>'}
+        pfirst=1
+        pbody="$(notice "$name")"$'\n'
+        continue ;;
+      '<<<endphase>>>')
+        [[ -n $slug ]] || { echo "$src: endphase without phase" >&2; exit 1; }
+        if [[ $fmt == claude ]]; then
+          phase_slugs+=("$slug")
+          phase_bodies+=("$pbody")
+        fi
+        slug=""
         continue ;;
     esac
     if [[ $cur == "$fmt" ]]; then
       built+="$line"$'\n'
     elif [[ $cur == body ]]; then
+      text=$line
       if [[ $line == *"{{"* ]]; then
         render_line "$line" "$fmt" "$other"
         if [[ -n $line && -z $rendered ]]; then continue; fi
-        built+="$rendered"$'\n'
+        text=$rendered
+      fi
+      if [[ $fmt == claude && -n $slug ]]; then
+        if [[ $pfirst == 1 ]]; then
+          built+="$text"$'\n'"$(phase_pointer "$slug")"$'\n'
+          pbody+="$text"$'\n'
+          pfirst=0
+        else
+          pbody+="$text"$'\n'
+        fi
       else
-        built+="$line"$'\n'
+        built+="$text"$'\n'
       fi
     fi
   done < "$src"
+  [[ -z $slug ]] || { echo "$src: unterminated phase block $slug" >&2; exit 1; }
 }
 
 stale=()
+write_or_check() { # $1=path $2=content
+  if [[ $check == 1 ]]; then
+    if [[ -f $1 ]] && cmp -s <(printf '%s' "$2") <(tr -d '\r' < "$1"); then
+      echo "ok: $1"
+    else
+      stale+=("$1")
+    fi
+  else
+    mkdir -p "$(dirname "$1")"
+    printf '%s' "$2" > "$1"
+    echo "generated: $1"
+  fi
+}
+
 for pair in "${pairs[@]}"; do
   IFS='|' read -r name claude_out copilot_out <<< "$pair"
   for fmt in claude copilot; do
     if [[ $fmt == claude ]]; then out_path=$claude_out; else out_path=$copilot_out; fi
     build_output "$name" "$fmt"
-    if [[ $check == 1 ]]; then
-      if [[ -f $out_path ]] && cmp -s <(printf '%s' "$built") <(tr -d '\r' < "$out_path"); then
-        echo "ok: $out_path"
-      else
-        stale+=("$out_path")
-      fi
-    else
-      mkdir -p "$(dirname "$out_path")"
-      printf '%s' "$built" > "$out_path"
-      echo "generated: $out_path"
+    write_or_check "$out_path" "$built"
+    if [[ $fmt == claude ]]; then
+      for i in "${!phase_slugs[@]}"; do
+        write_or_check "$(dirname "$out_path")/phases/${phase_slugs[$i]}.md" "${phase_bodies[$i]}"
+      done
     fi
   done
 done

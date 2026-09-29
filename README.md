@@ -28,7 +28,8 @@ dev-pipeline/
 │   └── pr-publisher.md           … コミット・PR作成（pr-description.md を出力）
 ├── skills/
 │   └── dev-pipeline/
-│       └── SKILL.md              … 【生成物】上記11エージェントを順に呼び出すオーケストレーター（/dev-pipeline スキル）
+│       ├── SKILL.md              … 【生成物】上記11エージェントを順に呼び出すオーケストレーター（/dev-pipeline スキル）。共通ルールだけを常時読み込む
+│       └── phases/               … 【生成物】フェーズ1〜6の手順。オーケストレーターが各フェーズに入る直前に読む
 ├── copilot/                      … GitHub Copilot 版（VS Code / Copilot CLI 用）
 │   ├── agents/                   … 【生成物】オーケストレーター + 10 フェーズエージェント（.agent.md）
 │   └── prompts/
@@ -304,6 +305,8 @@ Copilot 版は複数ベンダーのモデルを選べるため、作成フェー
 Claude 版（`agents/` + `skills/dev-pipeline/SKILL.md`）と Copilot 版（`copilot/agents/`）は `src/` の単一ソースから生成される。**編集するのは常に `src/` のみ。**生成物の先頭には自動生成である旨の注記が入っており、直接編集してはいけない（CI が検出して失敗する）。
 
 注記はこのリポジトリの URL を含む。生成物は対象プロジェクトの `.github/agents/` や `~/.claude/agents/` にコピーされて使われ、そこには `src/` も `tools/generate.*` も無いため、「どこを編集すべきか」がコピー先だけを見ても分かるようにしてある。
+
+Claude 版のオーケストレーターだけは、フェーズ1〜6の手順を `skills/dev-pipeline/phases/<n>-<name>.md` に分けて出力する。常時読み込まれるプロンプトを小さくするため（`SKILL.md` は約4割小さい）。Copilot 版は単一ファイルにインストールされるため、同じ内容を `.agent.md` に埋め込んだまま出力する。ソース側では `<<<phase:<slug>>>` 〜 `<<<endphase>>>` で囲んだ範囲がフェーズ節になり、その1行目（見出し）が `SKILL.md` に残る。
 
 `src/<name>.md` は3つのセクションからなる。
 

@@ -13,6 +13,11 @@
 #   - A non-empty source line that renders to an empty string (it held only
 #     markers for the other format) is dropped entirely.
 #   - An AUTO-GENERATED notice is inserted between the frontmatter and the body.
+#   - A body block delimited by <<<phase:SLUG>>> ... <<<endphase>>> is a phase section.
+#     Copilot output keeps it inline (the delimiter lines are dropped). Claude output keeps
+#     only the block's first line (the heading) plus a pointer sentence in the main file, and
+#     writes the rest to <main-output-dir>/phases/SLUG.md, which the orchestrator Reads on
+#     entering the phase (smaller always-loaded prompt).
 #
 # tools/generate.sh is the same generator for bash; keep the two behaviorally identical.
 #
@@ -69,29 +74,83 @@ function Parse-Source([string]$path) {
     return @{ claude = $claude; copilot = $copilot; body = $body }
 }
 
+function Get-Notice([string]$name) {
+    return "<!-- 自動生成ファイル: dev-pipelineリポジトリ（https://github.com/ymiyamoto63/gh-dev-pipeline）の src/$name.md から生成。編集はそのリポジトリの src/$name.md で行い tools/generate.ps1（または tools/generate.sh）を実行して再生成し、生成物をコピーし直すこと。インストール先にコピーされたこのファイルを直接編集しないこと（次回の更新で上書きされる）。 -->"
+}
+
+# Returns @{ Main = <lines>; Phases = <list of @{ Slug; Lines }> } (Phases is only filled for the claude format).
 function Render-Body($bodyLines, [string]$keep, [string]$drop, [string]$name) {
     $keepPat = '\{\{' + $keep + ':([^}]*)\}\}'
     $dropPat = '\{\{' + $drop + ':[^}]*\}\}'
-    $out = New-Object System.Collections.Generic.List[string]
+    $main = New-Object System.Collections.Generic.List[string]
+    $phases = New-Object System.Collections.Generic.List[object]
+    $slug = $null
+    $pfirst = $false
+    $plines = $null
     foreach ($line in $bodyLines) {
+        if ($line -match '^<<<phase:(.+)>>>$') {
+            if ($slug) { throw "src/$name.md: nested phase marker" }
+            $slug = $Matches[1]
+            $pfirst = $true
+            $plines = New-Object System.Collections.Generic.List[string]
+            $plines.Add((Get-Notice $name))
+            continue
+        }
+        if ($line -eq '<<<endphase>>>') {
+            if (-not $slug) { throw "src/$name.md: endphase without phase" }
+            if ($keep -eq 'claude') { $phases.Add(@{ Slug = $slug; Lines = $plines }) }
+            $slug = $null
+            continue
+        }
         $r = [regex]::Replace($line, $keepPat, '$1')
         $r = [regex]::Replace($r, $dropPat, '')
         if ($r.Contains('{{') -or $r.Contains('}}')) {
             throw "src/$name.md: unrendered marker remains in line: $r"
         }
         if ($line -ne '' -and $r -eq '' -and $line.Contains('{{')) { continue }
-        $out.Add($r)
+        if ($keep -eq 'claude' -and $slug) {
+            if ($pfirst) {
+                $main.Add($r)
+                $main.Add('')
+                $main.Add(('**このフェーズに入る直前に、このスキルのディレクトリにある`phases/{0}.md`をReadツールで全文読み、その手順に従う。読まずにこのフェーズを始めない。**' -f $slug))
+                $pfirst = $false
+            }
+            $plines.Add($r)
+        }
+        else { $main.Add($r) }
     }
-    return ,@($out)
+    if ($slug) { throw "src/$name.md: unterminated phase block $slug" }
+    return @{ Main = $main; Phases = $phases }
 }
 
 function Build-Output($sections, [string]$fmt, [string]$name) {
     if ($fmt -eq 'claude') { $other = 'copilot' } else { $other = 'claude' }
     $lines = New-Object System.Collections.Generic.List[string]
     foreach ($l in $sections[$fmt]) { $lines.Add($l) }
-    $lines.Add("<!-- 自動生成ファイル: dev-pipelineリポジトリ（https://github.com/ymiyamoto63/gh-dev-pipeline）の src/$name.md から生成。編集はそのリポジトリの src/$name.md で行い tools/generate.ps1（または tools/generate.sh）を実行して再生成し、生成物をコピーし直すこと。インストール先にコピーされたこのファイルを直接編集しないこと（次回の更新で上書きされる）。 -->")
-    foreach ($l in (Render-Body $sections['body'] $fmt $other $name)) { $lines.Add($l) }
-    return (($lines -join "`n") + "`n")
+    $lines.Add((Get-Notice $name))
+    $rendered = Render-Body $sections['body'] $fmt $other $name
+    foreach ($l in $rendered.Main) { $lines.Add($l) }
+    $phaseFiles = @()
+    foreach ($ph in $rendered.Phases) {
+        $phaseFiles += @{ Slug = $ph.Slug; Content = (($ph.Lines -join "`n") + "`n") }
+    }
+    return @{ Content = (($lines -join "`n") + "`n"); PhaseFiles = $phaseFiles }
+}
+
+function Write-Or-Check([string]$rel, [string]$content) {
+    $outPath = Join-Path $root $rel
+    if ($Check) {
+        $existing = ''
+        if (Test-Path $outPath) {
+            $existing = ([System.IO.File]::ReadAllText($outPath, [System.Text.Encoding]::UTF8) -replace "`r`n", "`n")
+        }
+        if ($existing -ne $content) { $script:stale += $rel } else { Write-Host "ok: $rel" }
+    }
+    else {
+        $null = New-Item -ItemType Directory -Force -Path (Split-Path -Parent $outPath)
+        [System.IO.File]::WriteAllText($outPath, $content, (New-Object System.Text.UTF8Encoding($false)))
+        Write-Host "generated: $rel"
+    }
 }
 
 $stale = @()
@@ -102,19 +161,11 @@ foreach ($p in $pairs) {
         @{ Fmt = 'copilot'; Rel = $p.Copilot }
     )
     foreach ($t in $targets) {
-        $outPath = Join-Path $root $t.Rel
-        $content = Build-Output $sections $t.Fmt $p.Name
-        if ($Check) {
-            $existing = ''
-            if (Test-Path $outPath) {
-                $existing = ([System.IO.File]::ReadAllText($outPath, [System.Text.Encoding]::UTF8) -replace "`r`n", "`n")
-            }
-            if ($existing -ne $content) { $stale += $t.Rel } else { Write-Host "ok: $($t.Rel)" }
-        }
-        else {
-            $null = New-Item -ItemType Directory -Force -Path (Split-Path -Parent $outPath)
-            [System.IO.File]::WriteAllText($outPath, $content, (New-Object System.Text.UTF8Encoding($false)))
-            Write-Host "generated: $($t.Rel)"
+        $built = Build-Output $sections $t.Fmt $p.Name
+        Write-Or-Check $t.Rel $built.Content
+        foreach ($pf in $built.PhaseFiles) {
+            $dir = (Split-Path -Parent $t.Rel).Replace('\', '/')
+            Write-Or-Check "$dir/phases/$($pf.Slug).md" $pf.Content
         }
     }
 }
