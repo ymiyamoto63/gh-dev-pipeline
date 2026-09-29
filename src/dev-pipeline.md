@@ -229,7 +229,7 @@ gh api repos/{owner}/{repo}/issues/<issue番号>/comments \
 各フェーズのサブエージェントは、出力文書を`<project_root>/.scratch/<issue番号>/`に書く。`<issue番号>`はフェーズ1で採番されたGitHub Issue番号。
 
 - `.scratch/`はgit管理外で、記録ではなくローカルの作業領域。**記録はIssueの側**にある: 要件定義書はIssue本文、設計とレビュー結果はそのコメント。Issueだけあればどのマシンでも実行内容を再構成できる。
-- `requirements-review.md`、`design-review.md`、`implementation-notes.md`、`test-report.md`、`review-*.md`（3観点のコードレビュー）、`pr-description.md`は意図的にローカル限定。後続フェーズのための作業用の材料であって、恒久的な記録の一部ではない。要件・設計のレビュー結果は、指摘が反映された文書そのものがIssueに載ることで記録される。コードレビューの4レポートは連結してIssueに投稿される。
+- `requirements-review.md`、`design-review.md`、`implementation-notes.md`、`test-report.md`、`review-*.md`（3観点のコードレビュー）、`pr-description.md`は意図的にローカル限定。後続フェーズのための作業用の材料であって、恒久的な記録の一部ではない。要件・設計のレビュー結果は、指摘が反映された文書そのものがIssueに載ることで記録される。コードレビューの3レポートは連結してIssueに投稿される。
 - 各サブエージェントには、正確なスクラッチディレクトリのパスを明示的に伝える。
 - 後のフェーズに委譲する際は、前のフェーズの内容全文をプロンプトに貼り付けず、その文書パスを指し示す。サブエージェントには読み取り権限があり、ファイルが正である。
 
