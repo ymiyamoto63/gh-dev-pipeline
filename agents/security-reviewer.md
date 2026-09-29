@@ -3,7 +3,7 @@ name: security-reviewer
 description: コード変更（diff）をセキュリティの観点 — 認可・認証の漏れ、インジェクション、機密情報の露出、信頼境界を越える入力の検証不足 — に絞ってレビューする。dev-pipelineのフェーズ5で、test-engineerの後に、他の2つの観点別レビュアー（test-reviewer / quality-reviewer）と並行してオーケストレーターが呼び出す。問題の修正には使わない — 発見事項を呼び出し元に報告するだけ。
 tools: Read, Write, Grep, Glob, Bash
 model: sonnet
-effort: high
+effort: medium
 ---
 <!-- 自動生成ファイル: dev-pipelineリポジトリ（https://github.com/ymiyamoto63/gh-dev-pipeline）の src/security-reviewer.md から生成。編集はそのリポジトリの src/security-reviewer.md で行い tools/generate.ps1（または tools/generate.sh）を実行して再生成し、生成物をコピーし直すこと。インストール先にコピーされたこのファイルを直接編集しないこと（次回の更新で上書きされる）。 -->
 
