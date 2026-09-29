@@ -3,7 +3,7 @@
 name: software-architect
 description: 承認済みの要件定義書を、具体的な実装設計（変更対象ファイル、APIコントラクト、実施順序、テスト戦略、ACマッピング、リスク）に変換する。dev-pipelineのフェーズ2で、requirements-analystの後、コードを書く前にオーケストレーターが呼び出す。コードを書くためには使わないこと。要件がまだ曖昧な場合は先にrequirements-analystに差し戻すこと。
 tools: Read, Write, Grep, Glob, Bash
-model: sonnet
+model: opus
 effort: high
 ---
 <<<copilot>>>
@@ -11,7 +11,7 @@ effort: high
 name: software-architect
 description: 承認済みの要件定義書を、具体的な実装設計（変更対象ファイル、APIコントラクト、実施順序、テスト戦略、ACマッピング、リスク）に変換する。dev-pipelineのフェーズ2で、requirements-analystの後、コードを書く前にオーケストレーターが呼び出す。コードを書くためには使わないこと。要件がまだ曖昧な場合は先にrequirements-analystに差し戻すこと。
 tools: ['read', 'edit', 'search', 'execute']
-model: Claude Sonnet 5.5
+model: Claude Opus 5.5
 disable-model-invocation: true
 ---
 <<<body>>>

@@ -279,13 +279,16 @@ Copilot 版は複数ベンダーのモデルを選べるため、作成フェー
 | --- | --- | --- |
 | `dev-pipeline`（オーケストレーター） | 親セッションのモデル | Claude Sonnet 5.5 |
 | `requirements-analyst` | `sonnet` | Claude Sonnet 5.5 |
-| `requirements-reviewer` | `sonnet` | Claude Sonnet 5.5 |
-| `software-architect` | `sonnet` | Claude Sonnet 5.5 |
-| `design-reviewer` | `sonnet` | Claude Sonnet 5.5 |
+| `requirements-reviewer` | `sonnet` | GPT 6.1 Sol |
+| `software-architect` | `opus` | Claude Opus 5.5 |
+| `design-reviewer` | `sonnet` | GPT 6.1 Sol |
 | `implementer` | `sonnet` | Claude Sonnet 5.5 |
 | `test-engineer` | `sonnet` | Claude Sonnet 5.5 |
-| `security-reviewer` / `test-reviewer` / `quality-reviewer` | `sonnet` | Claude Sonnet 5.5 |
-| `pr-publisher` | `haiku` | Claude Haiku 4.5 |
+| `security-reviewer` | `sonnet` | GPT 6.1 Sol |
+| `test-reviewer` / `quality-reviewer` | `sonnet` | GPT 6.1 Luna |
+| `pr-publisher` | `sonnet` | GPT 6.1 Luna |
+
+選定方針: 手戻りへの影響が最も大きい設計（`software-architect`）だけ最上位の Opus にし、それ以外は性能差が小さいので安価なモデルを優先する。Claude Code 版は Claude 系（`sonnet` / `opus`）しか選べないため、機械的な `pr-publisher` は最安の `sonnet` にしている。Copilot 版はレビュアーを作成側と別系統（GPT 6.1）にし、判断の重いセキュリティ・要件・設計レビューに Sol、テスト・構造レビューと PR 作成に安価な Luna を割り当てる。
 
 モデルを変更するときは、`src/<agent>.md` の該当 frontmatter（claude 側 / copilot 側）の `model` を編集して再生成する。
 
