@@ -1,6 +1,6 @@
 ---
 name: security-reviewer
-description: コード変更（diff）をセキュリティの観点 — 認可・認証の漏れ、インジェクション、機密情報の露出、信頼境界を越える入力の検証不足 — に絞ってレビューする。dev-pipelineのフェーズ5で、test-engineerの後に、他の3つの観点別レビュアー（test-reviewer / structure-reviewer / convention-reviewer）と並行してオーケストレーターが呼び出す。問題の修正には使わない — 発見事項を呼び出し元に報告するだけ。
+description: コード変更（diff）をセキュリティの観点 — 認可・認証の漏れ、インジェクション、機密情報の露出、信頼境界を越える入力の検証不足 — に絞ってレビューする。dev-pipelineのフェーズ5で、test-engineerの後に、他の2つの観点別レビュアー（test-reviewer / quality-reviewer）と並行してオーケストレーターが呼び出す。問題の修正には使わない — 発見事項を呼び出し元に報告するだけ。
 tools: Read, Write, Grep, Glob, Bash
 model: sonnet
 ---
@@ -33,7 +33,7 @@ model: sonnet
 
 ## レポートの形式
 
-レポートの1行目は見出し`### セキュリティ`にする。呼び出し元が4観点のレポートを連結してIssueに投稿する。
+レポートの1行目は見出し`### セキュリティ`にする。呼び出し元が3観点のレポートを連結してIssueに投稿する。
 
 発見事項を深刻度順にランク付けしたリストとして書く。各項目に含めるもの:
 

@@ -42,8 +42,7 @@ pairs=(
   "test-engineer|agents/test-engineer.md|copilot/agents/test-engineer.agent.md"
   "security-reviewer|agents/security-reviewer.md|copilot/agents/security-reviewer.agent.md"
   "test-reviewer|agents/test-reviewer.md|copilot/agents/test-reviewer.agent.md"
-  "structure-reviewer|agents/structure-reviewer.md|copilot/agents/structure-reviewer.agent.md"
-  "convention-reviewer|agents/convention-reviewer.md|copilot/agents/convention-reviewer.agent.md"
+  "quality-reviewer|agents/quality-reviewer.md|copilot/agents/quality-reviewer.agent.md"
   "pr-publisher|agents/pr-publisher.md|copilot/agents/pr-publisher.agent.md"
 )
 

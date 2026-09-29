@@ -40,8 +40,7 @@ $pairs = @(
     @{ Name = 'test-engineer';         Claude = 'agents/test-engineer.md';           Copilot = 'copilot/agents/test-engineer.agent.md' },
     @{ Name = 'security-reviewer';     Claude = 'agents/security-reviewer.md';       Copilot = 'copilot/agents/security-reviewer.agent.md' },
     @{ Name = 'test-reviewer';         Claude = 'agents/test-reviewer.md';           Copilot = 'copilot/agents/test-reviewer.agent.md' },
-    @{ Name = 'structure-reviewer';    Claude = 'agents/structure-reviewer.md';      Copilot = 'copilot/agents/structure-reviewer.agent.md' },
-    @{ Name = 'convention-reviewer';   Claude = 'agents/convention-reviewer.md';     Copilot = 'copilot/agents/convention-reviewer.agent.md' },
+    @{ Name = 'quality-reviewer';      Claude = 'agents/quality-reviewer.md';        Copilot = 'copilot/agents/quality-reviewer.agent.md' },
     @{ Name = 'pr-publisher';          Claude = 'agents/pr-publisher.md';            Copilot = 'copilot/agents/pr-publisher.agent.md' }
 )
 

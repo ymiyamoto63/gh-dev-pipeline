@@ -10,10 +10,12 @@
 | `## design` | software-architect、design-reviewer |
 | `## implementation` | implementer |
 | `## testing` | test-engineer |
-| `## review` | 4つの観点別コードレビュアー（security-reviewer / test-reviewer / structure-reviewer / convention-reviewer）全員 |
+| `## review` | 3つの観点別コードレビュアー（security-reviewer / test-reviewer / quality-reviewer）全員 |
 | `## publish` | pr-publisher |
 
-`## review` は4人のレビュアー全員に渡る。各レビュアーは自分の観点に関係する項目だけを適用し、どの観点にも明確に属さないスタック固有の欠陥パターンは convention-reviewer が担当する。
+`## review` は3人のレビュアー全員に渡る。各レビュアーは自分の観点に関係する項目だけを適用し、どの観点にも明確に属さないスタック固有の欠陥パターンは quality-reviewer が担当する。
+
+`## requirements` / `## design` に「レビューを省略しない」と書くと、変更が小さいタスクでも要件・設計のレビュアーが必ず実行される（既定では軽微なタスクのみ省略される）。
 
 ここに書いた内容はデフォルトであり、実リポジトリの規約・実装が常に優先される。以下は Vue 3 + Spring Boot スタックの例。対象プロジェクトに合わせて書き換えること。
 

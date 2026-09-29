@@ -1,6 +1,6 @@
 ---
 name: test-reviewer
-description: コード変更（diff）をテストの観点 — 変更した各振る舞いに対応するテストの有無、何も検証していない骨抜きテストの検出、既存テストの不当な弱体化、受け入れ基準と実テストコードの突き合わせ — に絞ってレビューする。dev-pipelineのフェーズ5で、test-engineerの後に、他の3つの観点別レビュアー（security-reviewer / structure-reviewer / convention-reviewer）と並行してオーケストレーターが呼び出す。テストの作成や修正には使わない — 発見事項を呼び出し元に報告するだけ。
+description: コード変更（diff）をテストの観点 — 変更した各振る舞いに対応するテストの有無、何も検証していない骨抜きテストの検出、既存テストの不当な弱体化、受け入れ基準と実テストコードの突き合わせ — に絞ってレビューする。dev-pipelineのフェーズ5で、test-engineerの後に、他の2つの観点別レビュアー（security-reviewer / quality-reviewer）と並行してオーケストレーターが呼び出す。テストの作成や修正には使わない — 発見事項を呼び出し元に報告するだけ。
 tools: ['read', 'edit', 'search', 'execute']
 model: Claude Sonnet 5.5
 disable-model-invocation: true
@@ -32,7 +32,7 @@ disable-model-invocation: true
 
 ## レポートの形式
 
-レポートの1行目は見出し`### テスト`にする。呼び出し元が4観点のレポートを連結してIssueに投稿する。
+レポートの1行目は見出し`### テスト`にする。呼び出し元が3観点のレポートを連結してIssueに投稿する。
 
 発見事項を深刻度順にランク付けしたリストとして書く。各項目に含めるもの:
 
